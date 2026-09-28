@@ -1,6 +1,7 @@
-// Cross-check against the Excel template itself: the sheet's own formulas were recalculated
-// for several key-date scenarios (see fixtures/excel-scenarios.json) and every START, END and
-// WORK DAYS value must match the planner.
+// Cross-check against the Excel sheets themselves (see fixtures/excel-scenarios.json):
+// - "orig", "sea2027", "sea2025", "new": the template's formulas recalculated for other key dates
+// - "prototype": a real project file, values exactly as Excel calculated and saved them
+// Every START, END and WORK DAYS value must match the planner in Excel-identical mode.
 import { describe, expect, it } from 'vitest';
 import data from './fixtures/excel-scenarios.json';
 import { schedule } from './scheduler';

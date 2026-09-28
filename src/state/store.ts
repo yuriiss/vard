@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer } from 'react';
-import { EXCEL_DEFAULT_DATES, MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE } from '../engine/template';
+import { MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE, SAMPLE_PROJECT_DATES } from '../engine/template';
 import type { KeyDateKey, Project, TaskOverride } from '../engine/types';
 import { toISO, type Day } from '../engine/dates';
 
@@ -43,7 +43,7 @@ export function newProject(name = 'New DP FMEA project', firstPassStart: string 
     id: uid(),
     name,
     vessel: '',
-    keyDates: { ...EXCEL_DEFAULT_DATES, firstPassStart },
+    keyDates: { ...SAMPLE_PROJECT_DATES, firstPassStart },
     classRevisions: 2,
     ownerReview: true,
     ...REALISTIC_MODE,
@@ -84,7 +84,7 @@ function load(): Workspace {
   } catch {
     // ignore – start fresh
   }
-  const p = newProject('DP FMEA project (Excel template)', EXCEL_DEFAULT_DATES.firstPassStart);
+  const p = newProject('Sample project (prototype.xlsx)');
   return { projects: [p], currentId: p.id };
 }
 

@@ -404,6 +404,17 @@ export const EXCEL_DEFAULT_DATES: {
   vesselDelivery: null,
 };
 
+/**
+ * Starting dates for new projects: the recently started project from prototype.xlsx
+ * (project start 21 Sep 2026, sea trial 31 Jan 2029). First Pass is left automatic.
+ */
+export const SAMPLE_PROJECT_DATES: typeof EXCEL_DEFAULT_DATES = {
+  projectStart: '2026-09-21',
+  firstPassStart: null,
+  seaTrial: '2029-01-31',
+  vesselDelivery: null,
+};
+
 /** Settings that make the planner calculate exactly like the Excel sheet. */
 export const EXCEL_MODE = { calendar: 'none', workdayStarts: false, vacations: 'always' } as const;
 /** Recommended settings: Norwegian calendar, no weekend starts, vacation only in summer. */

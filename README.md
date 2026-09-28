@@ -36,7 +36,9 @@ Durations are calendar days, like the DAYS column; WORK DAYS is `NETWORKDAYS` (M
 
 In **Excel-identical** mode the app reproduces the sheet exactly. The template's own formulas were
 recalculated for four key-date scenarios (different sea trial, project start and First Pass dates) and
-every START, END and WORK DAYS value of all 75 dated rows matches (`src/engine/excel-scenarios.test.ts`,
+every START, END and WORK DAYS value of all 75 dated rows matches. The same holds for a real project file
+(*prototype.xlsx*: project start 2026-09-21, sea trial 2029-01-31) using the values Excel itself saved
+(`src/engine/excel-scenarios.test.ts`,
 fixture in `src/engine/fixtures/excel-scenarios.json`). One deliberate difference: Excel adds the parallel task
 *9.5.2 Check DPCS IOs segregation* into the rev.0 phase duration (`=SUM(F47:F56)-F51`), which starts rev.0
 one day too early and leaves a one-day gap before Class approval rev.1. The app does not copy that.
