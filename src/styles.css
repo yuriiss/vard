@@ -213,3 +213,13 @@ button.link { border: 0; padding: 0; background: none; text-decoration: underlin
   .head-row { position: static; }
   :root { --w-act: 0px; }
 }
+
+/* --- Norwegian calendar ---------------------------------------------------- */
+.cal-overlay { position: absolute; top: 0; bottom: 0; left: var(--left-width); pointer-events: none; z-index: 1; }
+.cal-overlay .holiday { position: absolute; top: 0; bottom: 0; background: rgba(210, 0, 0, 0.09); }
+.cal-overlay .ferie { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, rgba(0, 112, 192, 0.06) 0 6px, transparent 6px 12px); }
+.holiday-head { position: absolute; bottom: 0; height: 5px; background: var(--vard-red); opacity: 0.7; cursor: help; }
+.ferie-head { position: absolute; top: 0; bottom: 0; background: rgba(0, 112, 192, 0.1); color: var(--blue); font-size: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; cursor: help; }
+.has-holiday::after { content: '•'; color: var(--vard-red); margin-left: 2px; }
+.lg.holiday { background: rgba(210, 0, 0, 0.25); width: 6px !important; height: 14px !important; }
+.lg.ferie { background: rgba(0, 112, 192, 0.18); }

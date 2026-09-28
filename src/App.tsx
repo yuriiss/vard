@@ -12,6 +12,7 @@ export default function App() {
   const { workspace, project, dispatch, canUndo, canRedo } = useWorkspace();
   const [zoom, setZoom] = useState<Zoom>('week');
   const [showNotes, setShowNotes] = useState(true);
+  const [showFellesferie, setShowFellesferie] = useState(true);
   const [highlight, setHighlight] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ day: number; n: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -53,7 +54,7 @@ export default function App() {
   const jumpTo = (id: string) => {
     setHighlight(id);
     goTo(s.tasks.get(id)?.start);
-    document.querySelector(`[data-row="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    document.querySelector(`[data-row="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'center' });
     setTimeout(() => setHighlight((h) => (h === id ? null : h)), 2500);
   };
 
@@ -184,6 +185,18 @@ export default function App() {
             Owner review rev.1 (parallel with Class rev.1)
           </label>
           <label className="check">
+            <input
+              type="checkbox"
+              checked={project.calendar !== 'none'}
+              onChange={(e) => dispatch({ type: 'setCalendar', value: e.target.checked ? 'NO' : 'none' })}
+            />
+            Norwegian public holidays (work days &amp; warnings)
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={showFellesferie} onChange={(e) => setShowFellesferie(e.target.checked)} />
+            Show fellesferie (weeks 28–30)
+          </label>
+          <label className="check">
             <input type="checkbox" checked={showNotes} onChange={(e) => setShowNotes(e.target.checked)} />
             Show checklist notes
           </label>
@@ -241,6 +254,8 @@ export default function App() {
           <span><i className="lg vacation" /> Vacation / buffer</span>
           <span><i className="lg sea" /> Sea trial</span>
           <span><i className="lg today" /> Today</span>
+          {project.calendar !== 'none' && <span><i className="lg holiday" /> Public holiday</span>}
+          {showFellesferie && <span><i className="lg ferie" /> Fellesferie</span>}
           {project.baseline && <span><i className="lg baseline" /> Baseline</span>}
         </div>
         <div className="controls">
@@ -275,7 +290,7 @@ export default function App() {
         </div>
       </section>
 
-      <ScheduleGrid project={project} schedule={s} dispatch={dispatch} zoom={zoom} showNotes={showNotes} highlight={highlight} focus={focus} />
+      <ScheduleGrid project={project} schedule={s} dispatch={dispatch} zoom={zoom} showNotes={showNotes} showFellesferie={showFellesferie} highlight={highlight} focus={focus} />
 
       <footer className="foot">
         <span className="legal">Vard Electro AS</span> · DP FMEA delivery planning · data is stored in this browser – use “Save file” to share

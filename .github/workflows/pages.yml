@@ -1,8 +1,11 @@
-# Manual deploy to GitHub Pages. Enable it once under
-# Settings → Pages → Build and deployment → Source: "GitHub Actions", then run this workflow.
+# Publishes the app to GitHub Pages (https://<owner>.github.io/<repo>/) on every push to the
+# default branch. If the first run fails at "Configure Pages", switch Pages on once under
+# Settings → Pages → Build and deployment → Source: "GitHub Actions" and re-run.
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [main, claude/dp-fmea-schedule-platform-pf5if1]
   workflow_dispatch:
 
 permissions:
@@ -26,6 +29,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: npm ci
       - run: npm test
       - run: npx vite build

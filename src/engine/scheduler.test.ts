@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { schedule } from './scheduler';
-import { toISO, parseISO } from './dates';
+import { fellesferie, norwegianHolidays, toISO, parseISO, workDays } from './dates';
 import { EXCEL_DEFAULT_DATES } from './template';
 import type { ProjectConfig } from './types';
 
@@ -8,6 +8,7 @@ const base = (): ProjectConfig => ({
   keyDates: { ...EXCEL_DEFAULT_DATES },
   classRevisions: 2,
   ownerReview: true,
+  calendar: 'NO',
   overrides: {},
 });
 
@@ -109,8 +110,16 @@ describe('matches the Excel template', () => {
     });
   }
 
-  it('has no warnings for the template dates', () => {
-    expect(s.warnings).toEqual([]);
+  it('has no conflicts for the template dates', () => {
+    expect(s.warnings.filter((w) => w.severity === 'error')).toEqual([]);
+  });
+
+  it('flags the Easter Sunday upload in the template (Norwegian calendar)', () => {
+    expect(s.warnings).toEqual([
+      { taskId: 'rev2.upload', severity: 'warning', message: 'Starts on a public holiday: 1. påskedag (05 Apr 2026).' },
+    ]);
+    const plain = schedule({ ...base(), calendar: 'none' });
+    expect(plain.warnings).toEqual([]);
   });
 
   it('reports the slack between First Pass and rev.0', () => {
@@ -160,7 +169,7 @@ describe('class approval revisions', () => {
 
     // rev.3 adds upload(3) + approval(14) + respond(14) + doc(2) + QA(3) = 36 days.
     expect(two.tasks.get('rev1.upload')!.start! - three.tasks.get('rev1.upload')!.start!).toBe(36);
-    expect(three.warnings).toEqual([]);
+    expect(three.warnings.filter((w) => w.severity === 'error')).toEqual([]);
   });
 
   it('supports a single revision', () => {
@@ -241,6 +250,31 @@ describe('overrides', () => {
     cfg.ownerReview = false;
     const s = schedule(cfg);
     expect(s.tasks.has('owner.upload')).toBe(false);
-    expect(s.warnings).toEqual([]);
+    expect(s.warnings.filter((w) => w.severity === 'error')).toEqual([]);
+  });
+});
+
+describe('Norwegian calendar (norskkalender.no)', () => {
+  // "Helligdager" as listed on https://www.norskkalender.no/?year=YYYY
+  const SITE: Record<number, string[]> = {
+    2025: ['2025-01-01', '2025-04-13', '2025-04-17', '2025-04-18', '2025-04-20', '2025-04-21', '2025-05-01', '2025-05-17', '2025-05-29', '2025-06-08', '2025-06-09', '2025-12-25', '2025-12-26'],
+    2026: ['2026-01-01', '2026-03-29', '2026-04-02', '2026-04-03', '2026-04-05', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-17', '2026-05-24', '2026-05-25', '2026-12-25', '2026-12-26'],
+    // 17 May 2027 is also 2. pinsedag – one day, two names.
+    2027: ['2027-01-01', '2027-03-21', '2027-03-25', '2027-03-26', '2027-03-28', '2027-03-29', '2027-05-01', '2027-05-06', '2027-05-16', '2027-05-17', '2027-12-25', '2027-12-26'],
+  };
+  for (const [year, days] of Object.entries(SITE)) {
+    it(`matches ${year}`, () => {
+      expect(norwegianHolidays(Number(year)).map((h) => toISO(h.day))).toEqual(days);
+    });
+  }
+
+  it('work days exclude weekday holidays', () => {
+    // Easter week 2026: Mon 30 Mar – Mon 6 Apr = 6 weekdays, minus Thu, Fri, Mon holidays.
+    expect(workDays(parseISO('2026-03-30'), parseISO('2026-04-06'))).toBe(6);
+    expect(workDays(parseISO('2026-03-30'), parseISO('2026-04-06'), true)).toBe(3);
+  });
+
+  it('fellesferie is ISO weeks 28–30', () => {
+    expect(fellesferie(2026).map(toISO)).toEqual(['2026-07-06', '2026-07-26']);
   });
 });

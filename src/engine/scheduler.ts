@@ -1,4 +1,4 @@
-import { addMonths, parseISO, isValidISO, workDays, type Day } from './dates';
+import { addMonths, formatDay, holidayName, holidaysBetween, isWeekend, parseISO, isValidISO, workDays, type Day } from './dates';
 import { buildTemplate } from './template';
 import type {
   Anchor,
@@ -104,6 +104,7 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
   };
 
   // --- build output ---------------------------------------------------------------
+  const useHolidays = (cfg.calendar ?? 'NO') === 'NO';
   const out: ScheduledPhase[] = [];
   const tasks = new Map<string, ScheduledTask>();
   let phaseNo = 0;
@@ -125,7 +126,13 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
         start,
         end,
         days,
-        workDays: start != null && end != null && days > 0 ? workDays(start, end) : null,
+        workDays: start != null && end != null && days > 0 ? workDays(start, end, useHolidays) : null,
+        holidays:
+          useHolidays && start != null && end != null
+            ? holidaysBetween(start, end)
+                .filter((h) => !isWeekend(h.day))
+                .map((h) => `${h.name} (${formatDay(h.day)})`)
+            : [],
         pinned: o.pinStart ? 'start' : o.pinEnd ? 'end' : null,
         disabled: !!o.disabled,
         done: !!o.done,
@@ -205,6 +212,19 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
           severity: 'error',
           message: `Starts ${plural(r.end - t.start + 1)} before "${r.name}" is finished.`,
         });
+      }
+    }
+  }
+
+  // Meetings, deliverables, the sea trial and hand-pinned dates should not start on a
+  // Norwegian public holiday.
+  if (useHolidays) {
+    for (const t of tasks.values()) {
+      if (t.start == null || t.disabled || t.kind === 'note') continue;
+      const relevant = t.pinned || t.emphasis || /meeting|sea trial|upload|submit/i.test(t.name);
+      const h = relevant ? holidayName(t.start) : undefined;
+      if (h) {
+        warnings.push({ taskId: t.id, severity: 'warning', message: `Starts on a public holiday: ${h} (${formatDay(t.start)}).` });
       }
     }
   }

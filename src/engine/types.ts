@@ -85,6 +85,11 @@ export interface ProjectConfig {
   classRevisions: number;
   /** Include "DP FMEA Owner review rev.1 (where applicable)". */
   ownerReview: boolean;
+  /**
+   * Working-day calendar. 'NO' = Mon–Fri minus Norwegian public holidays;
+   * 'none' = Mon–Fri only (what the Excel NETWORKDAYS column did).
+   */
+  calendar: 'NO' | 'none';
   overrides: Record<string, TaskOverride>;
 }
 
@@ -106,6 +111,8 @@ export interface ScheduledTask extends TaskDef {
   /** Effective duration after overrides (0 when disabled). */
   days: number;
   workDays: number | null;
+  /** Public holidays (weekdays) inside the task – they don't count as work days. */
+  holidays: string[];
   pinned: 'start' | 'end' | null;
   disabled: boolean;
   done: boolean;

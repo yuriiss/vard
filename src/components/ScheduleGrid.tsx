@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import {
+  fellesferie,
+  holidaysBetween,
+  yearOf,
   formatDay,
   formatMonth,
   isoWeek,
@@ -22,6 +25,7 @@ interface Props {
   dispatch: (a: Action) => void;
   zoom: Zoom;
   showNotes: boolean;
+  showFellesferie: boolean;
   highlight: string | null;
   /** Scroll the timeline so this day is visible; `n` makes repeated requests re-trigger. */
   focus: { day: number; n: number } | null;
@@ -29,7 +33,7 @@ interface Props {
 
 type Drag = { id: string; mode: 'move' | 'resize'; x0: number; dx: number };
 
-export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, highlight, focus }: Props) {
+export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, showFellesferie, highlight, focus }: Props) {
   const dw = ZOOMS[zoom];
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -84,6 +88,11 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, hig
       d = next;
     }
   }
+  const useHolidays = project.calendar !== 'none';
+  const holidays = useHolidays ? holidaysBetween(origin, lastDay) : [];
+  const ferie: [Day, Day][] = [];
+  if (showFellesferie) for (let y = yearOf(origin); y <= yearOf(lastDay); y++) ferie.push(fellesferie(y));
+
   const weeks: Day[] = [];
   for (let d = origin; d <= lastDay; d += 7) weeks.push(d);
 
@@ -272,7 +281,10 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, hig
               onCommit={(n) => dispatch({ type: 'setOverride', taskId: t.id, patch: { duration: n ?? undefined } })}
             />
           </div>
-          <div className="c-num muted" title="Work days (Mon–Fri)">
+          <div
+            className={`c-num muted ${t.holidays.length ? 'has-holiday' : ''}`}
+            title={`Work days (Mon–Fri${useHolidays ? ' excl. Norwegian public holidays' : ''})${t.holidays.length ? `\nHolidays: ${t.holidays.join(', ')}` : ''}`}
+          >
             {t.workDays ?? ''}
           </div>
           <div className="c-num">
@@ -332,7 +344,7 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, hig
               }
               title={`${t.name}\n${formatDay(start)} – ${formatDay(start + Math.max(days - 1, 0))} (${days} days)${
                 ws ? `\n⚠ ${ws.map((w) => w.message).join('\n⚠ ')}` : ''
-              }\nDrag to move · drag right edge to change duration`}
+              }${t.holidays.length ? `\nHolidays: ${t.holidays.join(', ')}` : ''}\nDrag to move · drag right edge to change duration`}
               onPointerDown={(e) => onBarPointerDown(e, t, 'move')}
             >
               {days > 0 && <span className="resize" onPointerDown={(e) => onBarPointerDown(e, t, 'resize')} />}
@@ -383,7 +395,23 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, hig
                 {7 * dw >= 20 ? (zoom === 'day' ? `W${isoWeek(w)} · ${formatDay(w).slice(0, 6)}` : isoWeek(w)) : ''}
               </div>
             ))}
+            {ferie.map(([a, b]) => (
+              <div key={`f${a}`} className="ferie-head" style={{ left: (a - origin) * dw, width: (b - a + 1) * dw }} title="Fellesferie (weeks 28–30)">
+                {(b - a + 1) * dw > 60 ? 'Fellesferie' : ''}
+              </div>
+            ))}
+            {holidays.map((h) => (
+              <div key={h.day} className="holiday-head" style={{ left: (h.day - origin) * dw, width: Math.max(dw, 4) }} title={`${h.name} – ${formatDay(h.day)}`} />
+            ))}
           </div>
+        </div>
+        <div className="cal-overlay" aria-hidden>
+          {ferie.map(([a, b]) => (
+            <div key={`f${a}`} className="ferie" style={{ left: (a - origin) * dw, width: (b - a + 1) * dw }} />
+          ))}
+          {holidays.map((h) => (
+            <div key={h.day} className="holiday" style={{ left: (h.day - origin) * dw, width: Math.max(dw, 2) }} />
+          ))}
         </div>
         {schedule.phases.map((p) => [
           renderPhase(p),

@@ -24,6 +24,7 @@ export type Action =
   | { type: 'resetAll' }
   | { type: 'setRevisions'; value: number }
   | { type: 'setOwnerReview'; value: boolean }
+  | { type: 'setCalendar'; value: 'NO' | 'none' }
   | { type: 'setMeta'; name?: string; vessel?: string }
   | { type: 'setBaseline'; dates: Record<string, { start: Day; end: Day }> | null }
   | { type: 'newProject' }
@@ -44,6 +45,7 @@ export function newProject(name = 'New DP FMEA project'): Project {
     keyDates: { ...EXCEL_DEFAULT_DATES },
     classRevisions: 2,
     ownerReview: true,
+    calendar: 'NO',
     overrides: {},
     baseline: null,
     updatedAt: new Date().toISOString(),
@@ -62,6 +64,7 @@ export function normaliseProject(raw: unknown): Project {
     overrides: p.overrides && typeof p.overrides === 'object' ? p.overrides : {},
     classRevisions: Math.min(MAX_REVISIONS, Math.max(MIN_REVISIONS, Number(p.classRevisions) || 2)),
     ownerReview: p.ownerReview ?? true,
+    calendar: p.calendar === 'none' ? 'none' : 'NO',
   };
 }
 
@@ -137,6 +140,8 @@ function apply(ws: Workspace, a: Action): Workspace {
       }));
     case 'setOwnerReview':
       return updateCurrent(ws, (p) => ({ ...p, ownerReview: a.value }));
+    case 'setCalendar':
+      return updateCurrent(ws, (p) => ({ ...p, calendar: a.value }));
     case 'setMeta':
       return updateCurrent(ws, (p) => ({ ...p, name: a.name ?? p.name, vessel: a.vessel ?? p.vessel }));
     case 'setBaseline':

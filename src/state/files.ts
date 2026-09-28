@@ -1,4 +1,4 @@
-import { toDate, startOfWeek, isoWeek, type Day } from '../engine/dates';
+import { holidaysBetween, isWeekend, toDate, startOfWeek, isoWeek, type Day } from '../engine/dates';
 import type { Project, Schedule } from '../engine/types';
 
 export function download(filename: string, blob: Blob) {
@@ -110,6 +110,20 @@ export async function exportExcel(project: Project, s: Schedule) {
   for (let i = 8; i < r; i++) {
     ws.getRow(i).getCell(3).numFmt = 'dd.mm.yyyy';
     ws.getRow(i).getCell(4).numFmt = 'dd.mm.yyyy';
+  }
+
+  if (project.calendar !== 'none' && s.start != null && s.end != null) {
+    const hs = wb.addWorksheet('Holidays (NO)');
+    hs.columns = [
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Holiday', key: 'name', width: 34 },
+      { header: 'Weekday', key: 'weekday', width: 10 },
+    ];
+    hs.getRow(1).font = { bold: true };
+    for (const h of holidaysBetween(s.start, s.end)) {
+      const row = hs.addRow({ date: toDate(h.day), name: h.name, weekday: isWeekend(h.day) ? 'weekend' : 'weekday' });
+      row.getCell(1).numFmt = 'dd.mm.yyyy';
+    }
   }
 
   const buf = await wb.xlsx.writeBuffer();

@@ -49,6 +49,11 @@ one day too early and leaves a one-day gap before Class approval rev.1. The app 
   the logic (e.g. starting before the predecessor has finished) are listed as conflicts.
 - **Change any duration / hours / name**, or **skip** a task (e.g. no summer vacation): the chain closes up.
 - **Drag** a bar to move it, drag its right edge to change the duration.
+- **Norwegian calendar**: work days exclude Norwegian public holidays (the same *helligdager* as
+  [norskkalender.no](https://www.norskkalender.no/), computed from the Easter date so it works for any
+  year). Holidays are shaded in the Gantt, and meetings, uploads, deliverables, the sea trial and pinned dates
+  that start on a holiday are flagged. Fellesferie (ISO weeks 28–30) can be shown as well. Switch the calendar
+  off to get Excel's plain `NETWORKDAYS` (Mon–Fri).
 - **Owner review** on/off, checklist notes on/off.
 - **Baseline**: freeze today's plan and see how many days each task moved later.
 - **Undo/redo** (Ctrl+Z / Ctrl+Shift+Z), several projects, duplicate a project to try a scenario.
@@ -74,12 +79,12 @@ The scheduling engine (`src/engine/`) has no React dependency, so it can later r
 
 ### Suggested next steps
 
-1. **Hosting**: static site – GitHub Pages (workflow in `.github/workflows/pages.yml`, run it manually after
-   enabling Pages), Azure Static Web Apps or an internal web server.
+1. **Hosting**: the app is published to GitHub Pages by `.github/workflows/pages.yml` on every push to the
+   default branch (https://yuriiss.github.io/vard/). Any static host works too (Azure Static Web Apps,
+   an internal web server).
 2. **Shared projects**: add a small API + database (e.g. Node/Fastify or ASP.NET + PostgreSQL, or Supabase)
    with Microsoft Entra ID sign-in, storing the same `Project` JSON the app already saves.
-3. **Holidays calendar** (Norwegian public holidays) for work-day counts, and optional "skip weekends" for
-   milestones.
+3. Optional "move to next working day" for meetings/uploads that land on a weekend or holiday.
 4. **Custom tasks** per project and template versioning (the Excel template has been updated over time).
 5. **Import** of existing project Excel files (read the key dates from `C8`, `C39`, `C90`).
 
