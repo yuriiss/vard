@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer } from 'react';
-import { EXCEL_DEFAULT_DATES, MAX_REVISIONS, MIN_REVISIONS } from '../engine/template';
+import { EXCEL_DEFAULT_DATES, MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE } from '../engine/template';
 import type { KeyDateKey, Project, TaskOverride } from '../engine/types';
 import { toISO, type Day } from '../engine/dates';
 
@@ -25,6 +25,7 @@ export type Action =
   | { type: 'setRevisions'; value: number }
   | { type: 'setOwnerReview'; value: boolean }
   | { type: 'setCalendar'; value: 'NO' | 'none' }
+  | { type: 'setCalc'; workdayStarts?: boolean; vacations?: 'auto' | 'always'; calendar?: 'NO' | 'none' }
   | { type: 'setMeta'; name?: string; vessel?: string }
   | { type: 'setBaseline'; dates: Record<string, { start: Day; end: Day }> | null }
   | { type: 'newProject' }
@@ -37,15 +38,15 @@ export type Action =
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export function newProject(name = 'New DP FMEA project'): Project {
+export function newProject(name = 'New DP FMEA project', firstPassStart: string | null = null): Project {
   return {
     id: uid(),
     name,
     vessel: '',
-    keyDates: { ...EXCEL_DEFAULT_DATES },
+    keyDates: { ...EXCEL_DEFAULT_DATES, firstPassStart },
     classRevisions: 2,
     ownerReview: true,
-    calendar: 'NO',
+    ...REALISTIC_MODE,
     overrides: {},
     baseline: null,
     updatedAt: new Date().toISOString(),
@@ -65,6 +66,8 @@ export function normaliseProject(raw: unknown): Project {
     classRevisions: Math.min(MAX_REVISIONS, Math.max(MIN_REVISIONS, Number(p.classRevisions) || 2)),
     ownerReview: p.ownerReview ?? true,
     calendar: p.calendar === 'none' ? 'none' : 'NO',
+    workdayStarts: p.workdayStarts ?? true,
+    vacations: p.vacations === 'always' ? 'always' : 'auto',
   };
 }
 
@@ -81,7 +84,7 @@ function load(): Workspace {
   } catch {
     // ignore – start fresh
   }
-  const p = newProject('DP FMEA project (Excel template)');
+  const p = newProject('DP FMEA project (Excel template)', EXCEL_DEFAULT_DATES.firstPassStart);
   return { projects: [p], currentId: p.id };
 }
 
@@ -112,7 +115,7 @@ function cleanOverride(o: TaskOverride): TaskOverride | null {
 function apply(ws: Workspace, a: Action): Workspace {
   switch (a.type) {
     case 'setKeyDate':
-      return updateCurrent(ws, (p) => ({ ...p, keyDates: { ...p.keyDates, [a.key]: a.value || (a.key === 'vesselDelivery' ? null : p.keyDates[a.key]) } }));
+      return updateCurrent(ws, (p) => ({ ...p, keyDates: { ...p.keyDates, [a.key]: a.value || (a.key === 'vesselDelivery' || a.key === 'firstPassStart' ? null : p.keyDates[a.key]) } }));
     case 'setOverride':
       return updateCurrent(ws, (p) => {
         const merged = { ...p.overrides[a.taskId], ...a.patch };
@@ -142,6 +145,13 @@ function apply(ws: Workspace, a: Action): Workspace {
       return updateCurrent(ws, (p) => ({ ...p, ownerReview: a.value }));
     case 'setCalendar':
       return updateCurrent(ws, (p) => ({ ...p, calendar: a.value }));
+    case 'setCalc':
+      return updateCurrent(ws, (p) => ({
+        ...p,
+        workdayStarts: a.workdayStarts ?? p.workdayStarts,
+        vacations: a.vacations ?? p.vacations,
+        calendar: a.calendar ?? p.calendar,
+      }));
     case 'setMeta':
       return updateCurrent(ws, (p) => ({ ...p, name: a.name ?? p.name, vessel: a.vessel ?? p.vessel }));
     case 'setBaseline':

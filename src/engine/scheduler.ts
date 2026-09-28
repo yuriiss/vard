@@ -1,4 +1,16 @@
-import { addMonths, formatDay, holidayName, holidaysBetween, isWeekend, parseISO, isValidISO, workDays, type Day } from './dates';
+import {
+  addMonths,
+  fellesferie,
+  formatDay,
+  holidayName,
+  holidaysBetween,
+  isWeekend,
+  parseISO,
+  isValidISO,
+  workDays,
+  yearOf,
+  type Day,
+} from './dates';
 import { buildTemplate } from './template';
 import type {
   Anchor,
@@ -27,6 +39,58 @@ export class CycleError extends Error {}
  * calendar days, exactly like the Excel DAYS column.
  */
 export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(cfg)): Schedule {
+  if ((cfg.vacations ?? 'auto') === 'always') return computeOnce(cfg, phases, new Set());
+
+  // Vacation blocks only count when they land in the summer. Moving one changes where the
+  // others land, so repeat until nothing changes (a handful of rounds at most).
+  const vacationIds = phases.flatMap((p) => p.tasks.filter((t) => t.vacation).map((t) => t.id));
+  let off = new Set<string>();
+  let result = computeOnce(cfg, phases, off);
+  const seen = new Set<string>([key(off)]);
+  for (let round = 0; round < 8; round++) {
+    const next = new Set<string>();
+    for (const id of vacationIds) {
+      const t = result.tasks.get(id);
+      if (!t || t.start == null || cfg.overrides[id]?.disabled) continue;
+      // Where would the full block sit? Forward blocks keep their start, backward ones their end.
+      const full = cfg.overrides[id]?.duration ?? t.duration;
+      const backward = t.anchor.kind === 'before';
+      const a = backward && off.has(id) ? t.start - full : t.start;
+      const b = a + full - 1;
+      if (!overlapsSummer(a, b)) next.add(id);
+    }
+    const k = key(next);
+    if (k === key(off) || seen.has(k)) break;
+    seen.add(k);
+    off = next;
+    result = computeOnce(cfg, phases, off);
+  }
+  return result;
+}
+
+const key = (s: Set<string>) => [...s].sort().join('|');
+
+function overlapsSummer(a: Day, b: Day): boolean {
+  for (let y = yearOf(a); y <= yearOf(b); y++) {
+    const [fs, fe] = fellesferie(y);
+    if (a <= fe && b >= fs) return true;
+  }
+  return false;
+}
+
+function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string>): Schedule {
+  const useHolidays = (cfg.calendar ?? 'NO') === 'NO';
+  const workdayStarts = cfg.workdayStarts ?? true;
+  const isWorking = (d: Day) => !isWeekend(d) && !(useHolidays && holidayName(d));
+  const nextWorking = (d: Day) => {
+    while (!isWorking(d)) d++;
+    return d;
+  };
+  const prevWorking = (d: Day) => {
+    while (!isWorking(d)) d--;
+    return d;
+  };
+
   const defs = new Map<string, TaskDef>();
   for (const p of phases)
     for (const t of p.tasks) {
@@ -38,7 +102,7 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
   const visiting = new Set<string>();
 
   const keyDay = (a: Extract<Anchor, { kind: 'date' }>): Day | null => {
-    const iso = cfg.keyDates[a.key];
+    const iso = cfg.keyDates[a.key] ?? null;
     if (!isValidISO(iso)) return null;
     let d = parseISO(iso);
     if (a.offsetMonths) d = addMonths(d, a.offsetMonths);
@@ -47,7 +111,7 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
 
   const durationOf = (t: TaskDef): number => {
     const o = cfg.overrides[t.id];
-    if (o?.disabled || t.kind === 'note') return 0;
+    if (o?.disabled || t.kind === 'note' || autoOff.has(t.id)) return 0;
     return Math.max(0, Math.round(o?.duration ?? t.duration));
   };
 
@@ -75,26 +139,13 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
       switch (a.kind) {
         case 'date': {
           const s = keyDay(a);
-          span = s == null ? null : { start: s, endEx: s + dur };
+          if (s != null) span = { start: s, endEx: s + dur };
+          else if (a.fallback) span = place(a.fallback, dur);
           break;
         }
-        case 'after': {
-          const r = resolve(a.ref);
-          span = r ? { start: r.endEx + (a.lag ?? 0), endEx: r.endEx + (a.lag ?? 0) + dur } : null;
+        default:
+          span = place(a, dur);
           break;
-        }
-        case 'with': {
-          const r = resolve(a.ref);
-          span = r ? { start: r.start + (a.lag ?? 0), endEx: r.start + (a.lag ?? 0) + dur } : null;
-          break;
-        }
-        case 'before': {
-          const r = resolve(a.ref);
-          span = r ? { start: r.start - (a.lag ?? 0) - dur, endEx: r.start - (a.lag ?? 0) } : null;
-          break;
-        }
-        case 'none':
-          span = null;
       }
     }
 
@@ -103,8 +154,42 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
     return span;
   };
 
+  /** Position from a link to another task. Key dates and pins are never moved. */
+  function place(a: Anchor, dur: number): Span | null {
+    switch (a.kind) {
+      case 'after': {
+        const r = resolve(a.ref);
+        if (!r) return null;
+        let s = r.endEx + (a.lag ?? 0);
+        if (workdayStarts && dur > 0) s = nextWorking(s);
+        return { start: s, endEx: s + dur };
+      }
+      case 'with': {
+        const r = resolve(a.ref);
+        if (!r) return null;
+        let s = r.start + (a.lag ?? 0);
+        if (workdayStarts && dur > 0) s = nextWorking(s);
+        return { start: s, endEx: s + dur };
+      }
+      case 'before': {
+        const r = resolve(a.ref);
+        if (!r) return null;
+        let s = r.start - (a.lag ?? 0) - dur;
+        // Backward planning: start earlier rather than on a day off (never later – that
+        // would overlap the task it has to finish before).
+        if (workdayStarts && dur > 0) s = prevWorking(s);
+        return { start: s, endEx: s + dur };
+      }
+      case 'date': {
+        const s = keyDay(a);
+        return s == null ? (a.fallback ? place(a.fallback, dur) : null) : { start: s, endEx: s + dur };
+      }
+      case 'none':
+        return null;
+    }
+  }
+
   // --- build output ---------------------------------------------------------------
-  const useHolidays = (cfg.calendar ?? 'NO') === 'NO';
   const out: ScheduledPhase[] = [];
   const tasks = new Map<string, ScheduledTask>();
   let phaseNo = 0;
@@ -134,7 +219,8 @@ export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(
                 .map((h) => `${h.name} (${formatDay(h.day)})`)
             : [],
         pinned: o.pinStart ? 'start' : o.pinEnd ? 'end' : null,
-        disabled: !!o.disabled,
+        disabled: !!o.disabled || autoOff.has(t.id),
+        autoSkipped: autoOff.has(t.id) && !o.disabled,
         done: !!o.done,
         comment: o.comment,
         modified:

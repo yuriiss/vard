@@ -206,7 +206,11 @@ export function buildTemplate(cfg: Pick<ProjectConfig, 'classRevisions' | 'owner
   );
 
   phases.push(
-    forward('firstPass', 'DP FMEA First Pass', { kind: 'date', key: 'firstPassStart' }, [
+    forward(
+      'firstPass',
+      'DP FMEA First Pass',
+      { kind: 'date', key: 'firstPassStart', fallback: { kind: 'after', ref: 'kickoff.classMom' } },
+      [
       {
         key: 'mark',
         name: 'DOC: Mark drawings that are subject for DP FMEA First Pass',
@@ -219,7 +223,8 @@ export function buildTemplate(cfg: Pick<ProjectConfig, 'classRevisions' | 'owner
       { key: 'qa', name: '4 weeks to Q&A and resolve received First Pass findings', days: 28, hours: 73 },
       note('stakeholders'),
       { key: 'vacation', name: '4 weeks Summer vacation', days: 28, vacation: true },
-    ]),
+      ],
+    ),
   );
 
   const rev1Head = 'rev1.upload';
@@ -387,9 +392,19 @@ export function buildTemplate(cfg: Pick<ProjectConfig, 'classRevisions' | 'owner
 }
 
 /** Default key dates = the ones in the Excel template, so the first screen matches it. */
-export const EXCEL_DEFAULT_DATES = {
+export const EXCEL_DEFAULT_DATES: {
+  projectStart: string;
+  firstPassStart: string | null;
+  seaTrial: string;
+  vesselDelivery: string | null;
+} = {
   projectStart: '2024-01-02',
   firstPassStart: '2024-05-08',
   seaTrial: '2026-08-04',
   vesselDelivery: null,
-} as const;
+};
+
+/** Settings that make the planner calculate exactly like the Excel sheet. */
+export const EXCEL_MODE = { calendar: 'none', workdayStarts: false, vacations: 'always' } as const;
+/** Recommended settings: Norwegian calendar, no weekend starts, vacation only in summer. */
+export const REALISTIC_MODE = { calendar: 'NO', workdayStarts: true, vacations: 'auto' } as const;

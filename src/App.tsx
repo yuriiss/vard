@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDay, todayDay } from './engine/dates';
 import { schedule as computeSchedule, CycleError } from './engine/scheduler';
-import { MAX_REVISIONS, MIN_REVISIONS } from './engine/template';
+import { EXCEL_MODE, MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE } from './engine/template';
 import type { Schedule } from './engine/types';
 import { useWorkspace } from './state/store';
 import { exportExcel, exportJson, readJsonFile } from './state/files';
@@ -50,6 +50,12 @@ export default function App() {
   const errors = s.warnings.filter((w) => w.severity === 'error');
   const editedCount = Object.keys(project.overrides).length;
   const totalHours = s.phases.reduce((n, p) => n + p.hours, 0);
+  const isExcel =
+    project.calendar === EXCEL_MODE.calendar && project.workdayStarts === EXCEL_MODE.workdayStarts && project.vacations === EXCEL_MODE.vacations;
+  const isRealistic =
+    project.calendar === REALISTIC_MODE.calendar &&
+    project.workdayStarts === REALISTIC_MODE.workdayStarts &&
+    project.vacations === REALISTIC_MODE.vacations;
 
   const jumpTo = (id: string) => {
     setHighlight(id);
@@ -145,8 +151,23 @@ export default function App() {
             <DateInput value={kd.projectStart} onCommit={(v) => dispatch({ type: 'setKeyDate', key: 'projectStart', value: v })} aria-label="Project start" />
           </label>
           <label>
-            First Pass start
-            <DateInput value={kd.firstPassStart} onCommit={(v) => dispatch({ type: 'setKeyDate', key: 'firstPassStart', value: v })} aria-label="First Pass start" />
+            <span>
+              First Pass start{' '}
+              {kd.firstPassStart ? (
+                <button className="link small" onClick={() => dispatch({ type: 'setKeyDate', key: 'firstPassStart', value: null })} title="Let First Pass follow the kick-off meetings">
+                  use auto
+                </button>
+              ) : (
+                <span className="opt">(auto)</span>
+              )}
+            </span>
+            <DateInput
+              allowEmpty
+              value={kd.firstPassStart}
+              onCommit={(v) => dispatch({ type: 'setKeyDate', key: 'firstPassStart', value: v })}
+              aria-label="First Pass start"
+            />
+            {!kd.firstPassStart && <small>after kick-off: {formatDay(t('firstPass.mark')?.start)}</small>}
           </label>
           <label>
             Vessel delivery <span className="opt">(optional)</span>
@@ -184,13 +205,48 @@ export default function App() {
             <input type="checkbox" checked={project.ownerReview} onChange={(e) => dispatch({ type: 'setOwnerReview', value: e.target.checked })} />
             Owner review rev.1 (parallel with Class rev.1)
           </label>
+          <div className="calc">
+            <span>Calculation</span>
+            <div className="seg" role="group" aria-label="Calculation mode">
+              <button
+                className={isRealistic ? 'on' : ''}
+                onClick={() => dispatch({ type: 'setCalc', ...REALISTIC_MODE })}
+                title="Norwegian calendar, tasks start on working days, summer vacation only in the summer"
+              >
+                Realistic
+              </button>
+              <button
+                className={isExcel ? 'on' : ''}
+                onClick={() => dispatch({ type: 'setCalc', ...EXCEL_MODE })}
+                title="Exactly like the Excel template: calendar days, NETWORKDAYS without holidays, vacation blocks always 4 weeks"
+              >
+                Excel-identical
+              </button>
+            </div>
+          </div>
           <label className="check">
             <input
               type="checkbox"
               checked={project.calendar !== 'none'}
               onChange={(e) => dispatch({ type: 'setCalendar', value: e.target.checked ? 'NO' : 'none' })}
             />
-            Norwegian public holidays (work days &amp; warnings)
+            Norwegian public holidays
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={project.workdayStarts}
+              onChange={(e) => dispatch({ type: 'setCalc', workdayStarts: e.target.checked })}
+            />
+            Tasks start on working days only
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={project.vacations === 'auto'}
+              onChange={(e) => dispatch({ type: 'setCalc', vacations: e.target.checked ? 'auto' : 'always' })}
+            />
+            Vacation blocks only when they fall in the summer
           </label>
           <label className="check">
             <input type="checkbox" checked={showFellesferie} onChange={(e) => setShowFellesferie(e.target.checked)} />

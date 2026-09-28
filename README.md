@@ -32,10 +32,25 @@ The app keeps exactly these rules, but as explicit links per task instead of cel
 
 Durations are calendar days, like the DAYS column; WORK DAYS is `NETWORKDAYS` (Mon–Fri).
 
-With the template's own dates the app reproduces every START/END in the sheet
-(`src/engine/scheduler.test.ts`), with one deliberate difference: Excel adds the parallel task
+### Verified against the spreadsheet
+
+In **Excel-identical** mode the app reproduces the sheet exactly. The template's own formulas were
+recalculated for four key-date scenarios (different sea trial, project start and First Pass dates) and
+every START, END and WORK DAYS value of all 75 dated rows matches (`src/engine/excel-scenarios.test.ts`,
+fixture in `src/engine/fixtures/excel-scenarios.json`). One deliberate difference: Excel adds the parallel task
 *9.5.2 Check DPCS IOs segregation* into the rev.0 phase duration (`=SUM(F47:F56)-F51`), which starts rev.0
 one day too early and leaves a one-day gap before Class approval rev.1. The app does not copy that.
+
+### Realistic mode (default) – where the Excel logic gives nonsense
+
+The sheet's arithmetic is right, but three of its rules produce plans no one would follow. **Realistic**
+mode (the default; switch in *Scope → Calculation*) fixes them:
+
+| Excel rule | Problem | Realistic mode |
+|---|---|---|
+| First Pass start is typed by hand | Change the project dates and First Pass stays in the old year (before project start) | Leave it empty and First Pass starts after the kick-off meetings; typing a date still works |
+| "4 weeks summer vacation" is always 28 days | The block lands in Jan–Mar and pushes rev.0 a month earlier for nothing | A vacation block only counts when it overlaps fellesferie (weeks 28–30); otherwise 0 days (☼ in the row) |
+| Calendar-day arithmetic | Uploads, meetings and DOC tasks start on Saturdays, Sundays and holidays (0 work days) | Forward-planned tasks move to the next working day, backward-planned tasks to the previous one; key dates and pinned dates are never moved |
 
 ## What you can do that Excel made painful
 

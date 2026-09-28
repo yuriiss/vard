@@ -53,8 +53,10 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
   const scrollToDay = (day: Day, behavior: ScrollBehavior = 'smooth') => {
     const el = scrollRef.current;
     if (!el) return;
-    const left = parseFloat(getComputedStyle(el).getPropertyValue('--left-width')) || 0;
-    el.scrollTo({ left: Math.max(0, (day - origin) * dw - (el.clientWidth - left) * 0.25), behavior });
+    // Width of the frozen task columns (the CSS variable is a calc(), so measure it).
+    const left = el.querySelector<HTMLElement>('.row > .left')?.offsetWidth ?? 0;
+    // Scroll position 0 shows the first timeline day right after the frozen columns.
+    el.scrollTo({ left: Math.max(0, (day - origin) * dw - (el.clientWidth - left) * 0.15), behavior });
   };
 
   // Keep the requested day in view (also after zooming).
@@ -246,7 +248,7 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
           <div className="c-name" title={t.name}>
             <TextInput
               className="name-input"
-              value={t.name}
+              value={t.autoSkipped ? `${t.name} – not in summer, 0 days` : t.name}
               aria-label="Task name"
               onCommit={(name) => dispatch({ type: 'setOverride', taskId: t.id, patch: { name } })}
             />
@@ -305,14 +307,23 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
                 📌
               </button>
             )}
-            <button
-              className={`icon skip ${t.disabled ? 'on' : ''}`}
-              title={t.disabled ? 'Skipped – click to include again' : 'Skip this task (counts as 0 days)'}
-              onClick={() => dispatch({ type: 'setOverride', taskId: t.id, patch: { disabled: !t.disabled } })}
-            >
-              {t.disabled ? '⊘' : '○'}
-            </button>
-            {(t.modified || t.pinned || t.disabled) && (
+            {t.autoSkipped ? (
+              <span
+                className="icon auto-skip"
+                title="Left out automatically: this block does not fall in the summer (fellesferie weeks 28–30). Set 'Vacation blocks' to 'Always' to count it anyway."
+              >
+                ☼
+              </span>
+            ) : (
+              <button
+                className={`icon skip ${t.disabled ? 'on' : ''}`}
+                title={t.disabled ? 'Skipped – click to include again' : 'Skip this task (counts as 0 days)'}
+                onClick={() => dispatch({ type: 'setOverride', taskId: t.id, patch: { disabled: !t.disabled } })}
+              >
+                {t.disabled ? '⊘' : '○'}
+              </button>
+            )}
+            {(t.modified || t.pinned || (t.disabled && !t.autoSkipped)) && (
               <button className="icon" title="Reset to template" onClick={() => dispatch({ type: 'resetTask', taskId: t.id })}>
                 ↺
               </button>

@@ -1,0 +1,1841 @@
+{
+ "source": "DP FMEA process schedule (Excel template, 2025-08-28), recalculated from its own formulas with the Python \"formulas\" engine",
+ "scenarios": {
+  "orig": {
+   "inputs": {
+    "projectStart": "2024-01-02",
+    "firstPassStart": "2024-05-08",
+    "seaTrial": "2026-08-04"
+   },
+   "rows": {
+    "start.period": {
+     "row": 8,
+     "start": "2024-01-02",
+     "end": "2024-01-15",
+     "workDays": 10
+    },
+    "prep.exchange": {
+     "row": 10,
+     "start": "2024-01-16",
+     "end": "2024-01-16",
+     "workDays": 1
+    },
+    "prep.plmStructure": {
+     "row": 11,
+     "start": "2024-01-17",
+     "end": "2024-01-17",
+     "workDays": 1
+    },
+    "prep.plmPlan": {
+     "row": 12,
+     "start": "2024-01-18",
+     "end": "2024-01-18",
+     "workDays": 1
+    },
+    "prep.docList": {
+     "row": 13,
+     "start": "2024-01-19",
+     "end": "2024-01-22",
+     "workDays": 2
+    },
+    "prep.dependencies": {
+     "row": 14,
+     "start": "2024-01-23",
+     "end": "2024-01-28",
+     "workDays": 4
+    },
+    "prep.kickoff": {
+     "row": 15,
+     "start": "2024-01-29",
+     "end": "2024-01-30",
+     "workDays": 2
+    },
+    "prep.mom": {
+     "row": 20,
+     "start": "2024-01-31",
+     "end": "2024-01-31",
+     "workDays": 1
+    },
+    "rfq.prepare": {
+     "row": 22,
+     "start": "2024-02-01",
+     "end": "2024-02-02",
+     "workDays": 2
+    },
+    "rfq.submit": {
+     "row": 23,
+     "start": "2024-02-03",
+     "end": "2024-02-03",
+     "workDays": 0
+    },
+    "rfq.wait": {
+     "row": 24,
+     "start": "2024-02-04",
+     "end": "2024-02-17",
+     "workDays": 10
+    },
+    "rfq.evaluate": {
+     "row": 25,
+     "start": "2024-02-18",
+     "end": "2024-02-22",
+     "workDays": 4
+    },
+    "rfq.nominate": {
+     "row": 26,
+     "start": "2024-02-23",
+     "end": "2024-02-23",
+     "workDays": 1
+    },
+    "rfq.consult": {
+     "row": 27,
+     "start": "2024-02-24",
+     "end": "2024-02-24",
+     "workDays": 0
+    },
+    "rfq.tss": {
+     "row": 28,
+     "start": "2024-02-25",
+     "end": "2024-02-27",
+     "workDays": 2
+    },
+    "rfq.po": {
+     "row": 29,
+     "start": "2024-02-28",
+     "end": "2024-03-01",
+     "workDays": 3
+    },
+    "rfq.waitPo": {
+     "row": 30,
+     "start": "2024-03-02",
+     "end": "2024-03-08",
+     "workDays": 5
+    },
+    "kickoff.meeting": {
+     "row": 32,
+     "start": "2024-03-09",
+     "end": "2024-03-09",
+     "workDays": 0
+    },
+    "kickoff.mom": {
+     "row": 33,
+     "start": "2024-03-10",
+     "end": "2024-03-12",
+     "workDays": 2
+    },
+    "kickoff.matrix": {
+     "row": 34,
+     "start": "2024-03-13",
+     "end": "2024-03-15",
+     "workDays": 3
+    },
+    "kickoff.mobilise": {
+     "row": 35,
+     "start": "2024-03-16",
+     "end": "2024-03-24",
+     "workDays": 5
+    },
+    "kickoff.classMeeting": {
+     "row": 36,
+     "start": "2024-03-25",
+     "end": "2024-03-26",
+     "workDays": 2
+    },
+    "kickoff.classMom": {
+     "row": 37,
+     "start": "2024-03-27",
+     "end": "2024-03-27",
+     "workDays": 1
+    },
+    "firstPass.mark": {
+     "row": 40,
+     "start": "2024-05-08",
+     "end": "2024-05-10",
+     "workDays": 3
+    },
+    "firstPass.collect": {
+     "row": 41,
+     "start": "2024-05-11",
+     "end": "2024-05-24",
+     "workDays": 10
+    },
+    "firstPass.develop": {
+     "row": 42,
+     "start": "2024-05-25",
+     "end": "2024-06-07",
+     "workDays": 10
+    },
+    "firstPass.qa": {
+     "row": 43,
+     "start": "2024-06-08",
+     "end": "2024-07-05",
+     "workDays": 20
+    },
+    "firstPass.vacation": {
+     "row": 45,
+     "start": "2024-07-06",
+     "end": "2024-08-02",
+     "workDays": 20
+    },
+    "rev0.collect": {
+     "row": 47,
+     "start": "2025-09-02",
+     "end": "2025-09-15",
+     "workDays": 10
+    },
+    "rev0.ioSegregation": {
+     "row": 48,
+     "start": "2025-09-02",
+     "end": "2025-09-02",
+     "workDays": 1
+    },
+    "rev0.cmc": {
+     "row": 49,
+     "start": "2025-09-16",
+     "end": "2025-09-29",
+     "workDays": 10
+    },
+    "rev0.r0": {
+     "row": 50,
+     "start": "2025-09-30",
+     "end": "2025-11-24",
+     "workDays": 40
+    },
+    "rev0.cmcDuring": {
+     "row": 51,
+     "start": "2025-09-30",
+     "end": "2025-10-20",
+     "workDays": 15
+    },
+    "rev0.qa": {
+     "row": 52,
+     "start": "2025-11-25",
+     "end": "2025-12-15",
+     "workDays": 15
+    },
+    "rev0.resolve": {
+     "row": 53,
+     "start": "2025-12-16",
+     "end": "2026-01-12",
+     "workDays": 20
+    },
+    "rev0.r1": {
+     "row": 54,
+     "start": "2026-01-13",
+     "end": "2026-01-19",
+     "workDays": 5
+    },
+    "rev0.qaR1": {
+     "row": 55,
+     "start": "2026-01-20",
+     "end": "2026-01-23",
+     "workDays": 4
+    },
+    "rev0.inform": {
+     "row": 56,
+     "start": "2026-01-24",
+     "end": "2026-01-24",
+     "workDays": 0
+    },
+    "owner.upload": {
+     "row": 58,
+     "start": "2026-01-26",
+     "end": "2026-01-27",
+     "workDays": 2
+    },
+    "owner.review": {
+     "row": 59,
+     "start": "2026-01-28",
+     "end": "2026-02-10",
+     "workDays": 10
+    },
+    "owner.respond": {
+     "row": 60,
+     "start": "2026-02-11",
+     "end": "2026-02-24",
+     "workDays": 10
+    },
+    "owner.vacation": {
+     "row": 62,
+     "start": "2026-02-25",
+     "end": "2026-03-24",
+     "workDays": 20
+    },
+    "rev1.upload": {
+     "row": 64,
+     "start": "2026-01-26",
+     "end": "2026-01-26",
+     "workDays": 1
+    },
+    "rev1.approval": {
+     "row": 65,
+     "start": "2026-01-27",
+     "end": "2026-02-16",
+     "workDays": 15
+    },
+    "rev1.respond": {
+     "row": 66,
+     "start": "2026-02-17",
+     "end": "2026-03-02",
+     "workDays": 10
+    },
+    "rev1.vacation": {
+     "row": 68,
+     "start": "2026-03-03",
+     "end": "2026-03-30",
+     "workDays": 20
+    },
+    "rev1.doc": {
+     "row": 69,
+     "start": "2026-03-31",
+     "end": "2026-04-02",
+     "workDays": 3
+    },
+    "rev1.qa": {
+     "row": 70,
+     "start": "2026-04-03",
+     "end": "2026-04-04",
+     "workDays": 1
+    },
+    "rev2.upload": {
+     "row": 72,
+     "start": "2026-04-05",
+     "end": "2026-04-07",
+     "workDays": 2
+    },
+    "rev2.testProcedure": {
+     "row": 73,
+     "start": "2026-04-08",
+     "end": "2026-04-08",
+     "workDays": 1
+    },
+    "rev2.approval": {
+     "row": 74,
+     "start": "2026-04-08",
+     "end": "2026-04-21",
+     "workDays": 10
+    },
+    "rev2.respond": {
+     "row": 75,
+     "start": "2026-04-22",
+     "end": "2026-05-05",
+     "workDays": 10
+    },
+    "rev2.doc": {
+     "row": 77,
+     "start": "2026-05-06",
+     "end": "2026-05-07",
+     "workDays": 2
+    },
+    "rev2.qa": {
+     "row": 78,
+     "start": "2026-05-08",
+     "end": "2026-05-10",
+     "workDays": 1
+    },
+    "classFinal.upload": {
+     "row": 79,
+     "start": "2026-05-11",
+     "end": "2026-05-11",
+     "workDays": 1
+    },
+    "classFinal.approval": {
+     "row": 80,
+     "start": "2026-05-12",
+     "end": "2026-05-25",
+     "workDays": 10
+    },
+    "trials.delivery": {
+     "row": 82,
+     "start": "2026-05-26",
+     "end": "2026-08-03",
+     "workDays": 50
+    },
+    "trials.skills": {
+     "row": 83,
+     "start": "2026-06-23",
+     "end": "2026-08-03",
+     "workDays": 30
+    },
+    "trials.skillsDoc": {
+     "row": 84,
+     "start": "2026-06-23",
+     "end": "2026-06-25",
+     "workDays": 3
+    },
+    "trials.coordination": {
+     "row": 85,
+     "start": "2026-07-07",
+     "end": "2026-08-03",
+     "workDays": 20
+    },
+    "trials.coordMeeting": {
+     "row": 86,
+     "start": "2026-07-07",
+     "end": "2026-07-07",
+     "workDays": null
+    },
+    "trials.coordMom": {
+     "row": 87,
+     "start": "2026-07-08",
+     "end": "2026-07-08",
+     "workDays": 1
+    },
+    "trials.labels": {
+     "row": 88,
+     "start": "2026-07-09",
+     "end": "2026-07-09",
+     "workDays": 1
+    },
+    "trials.internalTesting": {
+     "row": 89,
+     "start": "2026-07-21",
+     "end": "2026-08-03",
+     "workDays": 10
+    },
+    "trials.seaTrial": {
+     "row": 90,
+     "start": "2026-08-04",
+     "end": "2026-08-09",
+     "workDays": 4
+    },
+    "trials.prelim": {
+     "row": 91,
+     "start": "2026-08-10",
+     "end": "2026-08-10",
+     "workDays": 1
+    },
+    "trials.teamWorks": {
+     "row": 92,
+     "start": "2026-08-11",
+     "end": "2026-08-17",
+     "workDays": 5
+    },
+    "trials.distribute": {
+     "row": 93,
+     "start": "2026-08-18",
+     "end": "2026-08-18",
+     "workDays": 1
+    },
+    "trials.responses": {
+     "row": 94,
+     "start": "2026-08-19",
+     "end": "2026-08-19",
+     "workDays": 1
+    },
+    "trials.documents": {
+     "row": 95,
+     "start": "2026-08-20",
+     "end": "2026-08-20",
+     "workDays": 1
+    },
+    "trials.meetings": {
+     "row": 96,
+     "start": "2026-08-21",
+     "end": "2026-08-21",
+     "workDays": 1
+    },
+    "trials.submit": {
+     "row": 97,
+     "start": "2026-08-22",
+     "end": "2026-08-22",
+     "workDays": 0
+    },
+    "trials.report": {
+     "row": 98,
+     "start": "2026-08-18",
+     "end": "2026-08-24",
+     "workDays": 5
+    },
+    "trials.reportUpload": {
+     "row": 99,
+     "start": "2026-08-25",
+     "end": "2026-08-25",
+     "workDays": 1
+    },
+    "lessons.lessons": {
+     "row": 101,
+     "start": "2026-08-26",
+     "end": "2026-09-08",
+     "workDays": 10
+    }
+   }
+  },
+  "sea2027": {
+   "inputs": {
+    "projectStart": "2024-01-02",
+    "firstPassStart": "2024-05-08",
+    "seaTrial": "2027-03-15"
+   },
+   "rows": {
+    "start.period": {
+     "row": 8,
+     "start": "2024-01-02",
+     "end": "2024-01-15",
+     "workDays": 10
+    },
+    "prep.exchange": {
+     "row": 10,
+     "start": "2024-01-16",
+     "end": "2024-01-16",
+     "workDays": 1
+    },
+    "prep.plmStructure": {
+     "row": 11,
+     "start": "2024-01-17",
+     "end": "2024-01-17",
+     "workDays": 1
+    },
+    "prep.plmPlan": {
+     "row": 12,
+     "start": "2024-01-18",
+     "end": "2024-01-18",
+     "workDays": 1
+    },
+    "prep.docList": {
+     "row": 13,
+     "start": "2024-01-19",
+     "end": "2024-01-22",
+     "workDays": 2
+    },
+    "prep.dependencies": {
+     "row": 14,
+     "start": "2024-01-23",
+     "end": "2024-01-28",
+     "workDays": 4
+    },
+    "prep.kickoff": {
+     "row": 15,
+     "start": "2024-01-29",
+     "end": "2024-01-30",
+     "workDays": 2
+    },
+    "prep.mom": {
+     "row": 20,
+     "start": "2024-01-31",
+     "end": "2024-01-31",
+     "workDays": 1
+    },
+    "rfq.prepare": {
+     "row": 22,
+     "start": "2024-02-01",
+     "end": "2024-02-02",
+     "workDays": 2
+    },
+    "rfq.submit": {
+     "row": 23,
+     "start": "2024-02-03",
+     "end": "2024-02-03",
+     "workDays": 0
+    },
+    "rfq.wait": {
+     "row": 24,
+     "start": "2024-02-04",
+     "end": "2024-02-17",
+     "workDays": 10
+    },
+    "rfq.evaluate": {
+     "row": 25,
+     "start": "2024-02-18",
+     "end": "2024-02-22",
+     "workDays": 4
+    },
+    "rfq.nominate": {
+     "row": 26,
+     "start": "2024-02-23",
+     "end": "2024-02-23",
+     "workDays": 1
+    },
+    "rfq.consult": {
+     "row": 27,
+     "start": "2024-02-24",
+     "end": "2024-02-24",
+     "workDays": 0
+    },
+    "rfq.tss": {
+     "row": 28,
+     "start": "2024-02-25",
+     "end": "2024-02-27",
+     "workDays": 2
+    },
+    "rfq.po": {
+     "row": 29,
+     "start": "2024-02-28",
+     "end": "2024-03-01",
+     "workDays": 3
+    },
+    "rfq.waitPo": {
+     "row": 30,
+     "start": "2024-03-02",
+     "end": "2024-03-08",
+     "workDays": 5
+    },
+    "kickoff.meeting": {
+     "row": 32,
+     "start": "2024-03-09",
+     "end": "2024-03-09",
+     "workDays": 0
+    },
+    "kickoff.mom": {
+     "row": 33,
+     "start": "2024-03-10",
+     "end": "2024-03-12",
+     "workDays": 2
+    },
+    "kickoff.matrix": {
+     "row": 34,
+     "start": "2024-03-13",
+     "end": "2024-03-15",
+     "workDays": 3
+    },
+    "kickoff.mobilise": {
+     "row": 35,
+     "start": "2024-03-16",
+     "end": "2024-03-24",
+     "workDays": 5
+    },
+    "kickoff.classMeeting": {
+     "row": 36,
+     "start": "2024-03-25",
+     "end": "2024-03-26",
+     "workDays": 2
+    },
+    "kickoff.classMom": {
+     "row": 37,
+     "start": "2024-03-27",
+     "end": "2024-03-27",
+     "workDays": 1
+    },
+    "firstPass.mark": {
+     "row": 40,
+     "start": "2024-05-08",
+     "end": "2024-05-10",
+     "workDays": 3
+    },
+    "firstPass.collect": {
+     "row": 41,
+     "start": "2024-05-11",
+     "end": "2024-05-24",
+     "workDays": 10
+    },
+    "firstPass.develop": {
+     "row": 42,
+     "start": "2024-05-25",
+     "end": "2024-06-07",
+     "workDays": 10
+    },
+    "firstPass.qa": {
+     "row": 43,
+     "start": "2024-06-08",
+     "end": "2024-07-05",
+     "workDays": 20
+    },
+    "firstPass.vacation": {
+     "row": 45,
+     "start": "2024-07-06",
+     "end": "2024-08-02",
+     "workDays": 20
+    },
+    "rev0.collect": {
+     "row": 47,
+     "start": "2026-04-13",
+     "end": "2026-04-26",
+     "workDays": 10
+    },
+    "rev0.ioSegregation": {
+     "row": 48,
+     "start": "2026-04-13",
+     "end": "2026-04-13",
+     "workDays": 1
+    },
+    "rev0.cmc": {
+     "row": 49,
+     "start": "2026-04-27",
+     "end": "2026-05-10",
+     "workDays": 10
+    },
+    "rev0.r0": {
+     "row": 50,
+     "start": "2026-05-11",
+     "end": "2026-07-05",
+     "workDays": 40
+    },
+    "rev0.cmcDuring": {
+     "row": 51,
+     "start": "2026-05-11",
+     "end": "2026-05-31",
+     "workDays": 15
+    },
+    "rev0.qa": {
+     "row": 52,
+     "start": "2026-07-06",
+     "end": "2026-07-26",
+     "workDays": 15
+    },
+    "rev0.resolve": {
+     "row": 53,
+     "start": "2026-07-27",
+     "end": "2026-08-23",
+     "workDays": 20
+    },
+    "rev0.r1": {
+     "row": 54,
+     "start": "2026-08-24",
+     "end": "2026-08-30",
+     "workDays": 5
+    },
+    "rev0.qaR1": {
+     "row": 55,
+     "start": "2026-08-31",
+     "end": "2026-09-03",
+     "workDays": 4
+    },
+    "rev0.inform": {
+     "row": 56,
+     "start": "2026-09-04",
+     "end": "2026-09-04",
+     "workDays": 1
+    },
+    "owner.upload": {
+     "row": 58,
+     "start": "2026-09-06",
+     "end": "2026-09-07",
+     "workDays": 1
+    },
+    "owner.review": {
+     "row": 59,
+     "start": "2026-09-08",
+     "end": "2026-09-21",
+     "workDays": 10
+    },
+    "owner.respond": {
+     "row": 60,
+     "start": "2026-09-22",
+     "end": "2026-10-05",
+     "workDays": 10
+    },
+    "owner.vacation": {
+     "row": 62,
+     "start": "2026-10-06",
+     "end": "2026-11-02",
+     "workDays": 20
+    },
+    "rev1.upload": {
+     "row": 64,
+     "start": "2026-09-06",
+     "end": "2026-09-06",
+     "workDays": 0
+    },
+    "rev1.approval": {
+     "row": 65,
+     "start": "2026-09-07",
+     "end": "2026-09-27",
+     "workDays": 15
+    },
+    "rev1.respond": {
+     "row": 66,
+     "start": "2026-09-28",
+     "end": "2026-10-11",
+     "workDays": 10
+    },
+    "rev1.vacation": {
+     "row": 68,
+     "start": "2026-10-12",
+     "end": "2026-11-08",
+     "workDays": 20
+    },
+    "rev1.doc": {
+     "row": 69,
+     "start": "2026-11-09",
+     "end": "2026-11-11",
+     "workDays": 3
+    },
+    "rev1.qa": {
+     "row": 70,
+     "start": "2026-11-12",
+     "end": "2026-11-13",
+     "workDays": 2
+    },
+    "rev2.upload": {
+     "row": 72,
+     "start": "2026-11-14",
+     "end": "2026-11-16",
+     "workDays": 1
+    },
+    "rev2.testProcedure": {
+     "row": 73,
+     "start": "2026-11-17",
+     "end": "2026-11-17",
+     "workDays": 1
+    },
+    "rev2.approval": {
+     "row": 74,
+     "start": "2026-11-17",
+     "end": "2026-11-30",
+     "workDays": 10
+    },
+    "rev2.respond": {
+     "row": 75,
+     "start": "2026-12-01",
+     "end": "2026-12-14",
+     "workDays": 10
+    },
+    "rev2.doc": {
+     "row": 77,
+     "start": "2026-12-15",
+     "end": "2026-12-16",
+     "workDays": 2
+    },
+    "rev2.qa": {
+     "row": 78,
+     "start": "2026-12-17",
+     "end": "2026-12-19",
+     "workDays": 2
+    },
+    "classFinal.upload": {
+     "row": 79,
+     "start": "2026-12-20",
+     "end": "2026-12-20",
+     "workDays": 0
+    },
+    "classFinal.approval": {
+     "row": 80,
+     "start": "2026-12-21",
+     "end": "2027-01-03",
+     "workDays": 10
+    },
+    "trials.delivery": {
+     "row": 82,
+     "start": "2027-01-04",
+     "end": "2027-03-14",
+     "workDays": 50
+    },
+    "trials.skills": {
+     "row": 83,
+     "start": "2027-02-01",
+     "end": "2027-03-14",
+     "workDays": 30
+    },
+    "trials.skillsDoc": {
+     "row": 84,
+     "start": "2027-02-01",
+     "end": "2027-02-03",
+     "workDays": 3
+    },
+    "trials.coordination": {
+     "row": 85,
+     "start": "2027-02-15",
+     "end": "2027-03-14",
+     "workDays": 20
+    },
+    "trials.coordMeeting": {
+     "row": 86,
+     "start": "2027-02-15",
+     "end": "2027-02-15",
+     "workDays": null
+    },
+    "trials.coordMom": {
+     "row": 87,
+     "start": "2027-02-16",
+     "end": "2027-02-16",
+     "workDays": 1
+    },
+    "trials.labels": {
+     "row": 88,
+     "start": "2027-02-17",
+     "end": "2027-02-17",
+     "workDays": 1
+    },
+    "trials.internalTesting": {
+     "row": 89,
+     "start": "2027-03-01",
+     "end": "2027-03-14",
+     "workDays": 10
+    },
+    "trials.seaTrial": {
+     "row": 90,
+     "start": "2027-03-15",
+     "end": "2027-03-20",
+     "workDays": 5
+    },
+    "trials.prelim": {
+     "row": 91,
+     "start": "2027-03-21",
+     "end": "2027-03-21",
+     "workDays": 0
+    },
+    "trials.teamWorks": {
+     "row": 92,
+     "start": "2027-03-22",
+     "end": "2027-03-28",
+     "workDays": 5
+    },
+    "trials.distribute": {
+     "row": 93,
+     "start": "2027-03-29",
+     "end": "2027-03-29",
+     "workDays": 1
+    },
+    "trials.responses": {
+     "row": 94,
+     "start": "2027-03-30",
+     "end": "2027-03-30",
+     "workDays": 1
+    },
+    "trials.documents": {
+     "row": 95,
+     "start": "2027-03-31",
+     "end": "2027-03-31",
+     "workDays": 1
+    },
+    "trials.meetings": {
+     "row": 96,
+     "start": "2027-04-01",
+     "end": "2027-04-01",
+     "workDays": 1
+    },
+    "trials.submit": {
+     "row": 97,
+     "start": "2027-04-02",
+     "end": "2027-04-02",
+     "workDays": 1
+    },
+    "trials.report": {
+     "row": 98,
+     "start": "2027-03-29",
+     "end": "2027-04-04",
+     "workDays": 5
+    },
+    "trials.reportUpload": {
+     "row": 99,
+     "start": "2027-04-05",
+     "end": "2027-04-05",
+     "workDays": 1
+    },
+    "lessons.lessons": {
+     "row": 101,
+     "start": "2027-04-06",
+     "end": "2027-04-19",
+     "workDays": 10
+    }
+   }
+  },
+  "sea2025": {
+   "inputs": {
+    "projectStart": "2024-01-02",
+    "firstPassStart": "2024-05-08",
+    "seaTrial": "2025-12-01"
+   },
+   "rows": {
+    "start.period": {
+     "row": 8,
+     "start": "2024-01-02",
+     "end": "2024-01-15",
+     "workDays": 10
+    },
+    "prep.exchange": {
+     "row": 10,
+     "start": "2024-01-16",
+     "end": "2024-01-16",
+     "workDays": 1
+    },
+    "prep.plmStructure": {
+     "row": 11,
+     "start": "2024-01-17",
+     "end": "2024-01-17",
+     "workDays": 1
+    },
+    "prep.plmPlan": {
+     "row": 12,
+     "start": "2024-01-18",
+     "end": "2024-01-18",
+     "workDays": 1
+    },
+    "prep.docList": {
+     "row": 13,
+     "start": "2024-01-19",
+     "end": "2024-01-22",
+     "workDays": 2
+    },
+    "prep.dependencies": {
+     "row": 14,
+     "start": "2024-01-23",
+     "end": "2024-01-28",
+     "workDays": 4
+    },
+    "prep.kickoff": {
+     "row": 15,
+     "start": "2024-01-29",
+     "end": "2024-01-30",
+     "workDays": 2
+    },
+    "prep.mom": {
+     "row": 20,
+     "start": "2024-01-31",
+     "end": "2024-01-31",
+     "workDays": 1
+    },
+    "rfq.prepare": {
+     "row": 22,
+     "start": "2024-02-01",
+     "end": "2024-02-02",
+     "workDays": 2
+    },
+    "rfq.submit": {
+     "row": 23,
+     "start": "2024-02-03",
+     "end": "2024-02-03",
+     "workDays": 0
+    },
+    "rfq.wait": {
+     "row": 24,
+     "start": "2024-02-04",
+     "end": "2024-02-17",
+     "workDays": 10
+    },
+    "rfq.evaluate": {
+     "row": 25,
+     "start": "2024-02-18",
+     "end": "2024-02-22",
+     "workDays": 4
+    },
+    "rfq.nominate": {
+     "row": 26,
+     "start": "2024-02-23",
+     "end": "2024-02-23",
+     "workDays": 1
+    },
+    "rfq.consult": {
+     "row": 27,
+     "start": "2024-02-24",
+     "end": "2024-02-24",
+     "workDays": 0
+    },
+    "rfq.tss": {
+     "row": 28,
+     "start": "2024-02-25",
+     "end": "2024-02-27",
+     "workDays": 2
+    },
+    "rfq.po": {
+     "row": 29,
+     "start": "2024-02-28",
+     "end": "2024-03-01",
+     "workDays": 3
+    },
+    "rfq.waitPo": {
+     "row": 30,
+     "start": "2024-03-02",
+     "end": "2024-03-08",
+     "workDays": 5
+    },
+    "kickoff.meeting": {
+     "row": 32,
+     "start": "2024-03-09",
+     "end": "2024-03-09",
+     "workDays": 0
+    },
+    "kickoff.mom": {
+     "row": 33,
+     "start": "2024-03-10",
+     "end": "2024-03-12",
+     "workDays": 2
+    },
+    "kickoff.matrix": {
+     "row": 34,
+     "start": "2024-03-13",
+     "end": "2024-03-15",
+     "workDays": 3
+    },
+    "kickoff.mobilise": {
+     "row": 35,
+     "start": "2024-03-16",
+     "end": "2024-03-24",
+     "workDays": 5
+    },
+    "kickoff.classMeeting": {
+     "row": 36,
+     "start": "2024-03-25",
+     "end": "2024-03-26",
+     "workDays": 2
+    },
+    "kickoff.classMom": {
+     "row": 37,
+     "start": "2024-03-27",
+     "end": "2024-03-27",
+     "workDays": 1
+    },
+    "firstPass.mark": {
+     "row": 40,
+     "start": "2024-05-08",
+     "end": "2024-05-10",
+     "workDays": 3
+    },
+    "firstPass.collect": {
+     "row": 41,
+     "start": "2024-05-11",
+     "end": "2024-05-24",
+     "workDays": 10
+    },
+    "firstPass.develop": {
+     "row": 42,
+     "start": "2024-05-25",
+     "end": "2024-06-07",
+     "workDays": 10
+    },
+    "firstPass.qa": {
+     "row": 43,
+     "start": "2024-06-08",
+     "end": "2024-07-05",
+     "workDays": 20
+    },
+    "firstPass.vacation": {
+     "row": 45,
+     "start": "2024-07-06",
+     "end": "2024-08-02",
+     "workDays": 20
+    },
+    "rev0.collect": {
+     "row": 47,
+     "start": "2024-12-30",
+     "end": "2025-01-12",
+     "workDays": 10
+    },
+    "rev0.ioSegregation": {
+     "row": 48,
+     "start": "2024-12-30",
+     "end": "2024-12-30",
+     "workDays": 1
+    },
+    "rev0.cmc": {
+     "row": 49,
+     "start": "2025-01-13",
+     "end": "2025-01-26",
+     "workDays": 10
+    },
+    "rev0.r0": {
+     "row": 50,
+     "start": "2025-01-27",
+     "end": "2025-03-23",
+     "workDays": 40
+    },
+    "rev0.cmcDuring": {
+     "row": 51,
+     "start": "2025-01-27",
+     "end": "2025-02-16",
+     "workDays": 15
+    },
+    "rev0.qa": {
+     "row": 52,
+     "start": "2025-03-24",
+     "end": "2025-04-13",
+     "workDays": 15
+    },
+    "rev0.resolve": {
+     "row": 53,
+     "start": "2025-04-14",
+     "end": "2025-05-11",
+     "workDays": 20
+    },
+    "rev0.r1": {
+     "row": 54,
+     "start": "2025-05-12",
+     "end": "2025-05-18",
+     "workDays": 5
+    },
+    "rev0.qaR1": {
+     "row": 55,
+     "start": "2025-05-19",
+     "end": "2025-05-22",
+     "workDays": 4
+    },
+    "rev0.inform": {
+     "row": 56,
+     "start": "2025-05-23",
+     "end": "2025-05-23",
+     "workDays": 1
+    },
+    "owner.upload": {
+     "row": 58,
+     "start": "2025-05-25",
+     "end": "2025-05-26",
+     "workDays": 1
+    },
+    "owner.review": {
+     "row": 59,
+     "start": "2025-05-27",
+     "end": "2025-06-09",
+     "workDays": 10
+    },
+    "owner.respond": {
+     "row": 60,
+     "start": "2025-06-10",
+     "end": "2025-06-23",
+     "workDays": 10
+    },
+    "owner.vacation": {
+     "row": 62,
+     "start": "2025-06-24",
+     "end": "2025-07-21",
+     "workDays": 20
+    },
+    "rev1.upload": {
+     "row": 64,
+     "start": "2025-05-25",
+     "end": "2025-05-25",
+     "workDays": 0
+    },
+    "rev1.approval": {
+     "row": 65,
+     "start": "2025-05-26",
+     "end": "2025-06-15",
+     "workDays": 15
+    },
+    "rev1.respond": {
+     "row": 66,
+     "start": "2025-06-16",
+     "end": "2025-06-29",
+     "workDays": 10
+    },
+    "rev1.vacation": {
+     "row": 68,
+     "start": "2025-06-30",
+     "end": "2025-07-27",
+     "workDays": 20
+    },
+    "rev1.doc": {
+     "row": 69,
+     "start": "2025-07-28",
+     "end": "2025-07-30",
+     "workDays": 3
+    },
+    "rev1.qa": {
+     "row": 70,
+     "start": "2025-07-31",
+     "end": "2025-08-01",
+     "workDays": 2
+    },
+    "rev2.upload": {
+     "row": 72,
+     "start": "2025-08-02",
+     "end": "2025-08-04",
+     "workDays": 1
+    },
+    "rev2.testProcedure": {
+     "row": 73,
+     "start": "2025-08-05",
+     "end": "2025-08-05",
+     "workDays": 1
+    },
+    "rev2.approval": {
+     "row": 74,
+     "start": "2025-08-05",
+     "end": "2025-08-18",
+     "workDays": 10
+    },
+    "rev2.respond": {
+     "row": 75,
+     "start": "2025-08-19",
+     "end": "2025-09-01",
+     "workDays": 10
+    },
+    "rev2.doc": {
+     "row": 77,
+     "start": "2025-09-02",
+     "end": "2025-09-03",
+     "workDays": 2
+    },
+    "rev2.qa": {
+     "row": 78,
+     "start": "2025-09-04",
+     "end": "2025-09-06",
+     "workDays": 2
+    },
+    "classFinal.upload": {
+     "row": 79,
+     "start": "2025-09-07",
+     "end": "2025-09-07",
+     "workDays": 0
+    },
+    "classFinal.approval": {
+     "row": 80,
+     "start": "2025-09-08",
+     "end": "2025-09-21",
+     "workDays": 10
+    },
+    "trials.delivery": {
+     "row": 82,
+     "start": "2025-09-22",
+     "end": "2025-11-30",
+     "workDays": 50
+    },
+    "trials.skills": {
+     "row": 83,
+     "start": "2025-10-20",
+     "end": "2025-11-30",
+     "workDays": 30
+    },
+    "trials.skillsDoc": {
+     "row": 84,
+     "start": "2025-10-20",
+     "end": "2025-10-22",
+     "workDays": 3
+    },
+    "trials.coordination": {
+     "row": 85,
+     "start": "2025-11-03",
+     "end": "2025-11-30",
+     "workDays": 20
+    },
+    "trials.coordMeeting": {
+     "row": 86,
+     "start": "2025-11-03",
+     "end": "2025-11-03",
+     "workDays": null
+    },
+    "trials.coordMom": {
+     "row": 87,
+     "start": "2025-11-04",
+     "end": "2025-11-04",
+     "workDays": 1
+    },
+    "trials.labels": {
+     "row": 88,
+     "start": "2025-11-05",
+     "end": "2025-11-05",
+     "workDays": 1
+    },
+    "trials.internalTesting": {
+     "row": 89,
+     "start": "2025-11-17",
+     "end": "2025-11-30",
+     "workDays": 10
+    },
+    "trials.seaTrial": {
+     "row": 90,
+     "start": "2025-12-01",
+     "end": "2025-12-06",
+     "workDays": 5
+    },
+    "trials.prelim": {
+     "row": 91,
+     "start": "2025-12-07",
+     "end": "2025-12-07",
+     "workDays": 0
+    },
+    "trials.teamWorks": {
+     "row": 92,
+     "start": "2025-12-08",
+     "end": "2025-12-14",
+     "workDays": 5
+    },
+    "trials.distribute": {
+     "row": 93,
+     "start": "2025-12-15",
+     "end": "2025-12-15",
+     "workDays": 1
+    },
+    "trials.responses": {
+     "row": 94,
+     "start": "2025-12-16",
+     "end": "2025-12-16",
+     "workDays": 1
+    },
+    "trials.documents": {
+     "row": 95,
+     "start": "2025-12-17",
+     "end": "2025-12-17",
+     "workDays": 1
+    },
+    "trials.meetings": {
+     "row": 96,
+     "start": "2025-12-18",
+     "end": "2025-12-18",
+     "workDays": 1
+    },
+    "trials.submit": {
+     "row": 97,
+     "start": "2025-12-19",
+     "end": "2025-12-19",
+     "workDays": 1
+    },
+    "trials.report": {
+     "row": 98,
+     "start": "2025-12-15",
+     "end": "2025-12-21",
+     "workDays": 5
+    },
+    "trials.reportUpload": {
+     "row": 99,
+     "start": "2025-12-22",
+     "end": "2025-12-22",
+     "workDays": 1
+    },
+    "lessons.lessons": {
+     "row": 101,
+     "start": "2025-12-23",
+     "end": "2026-01-05",
+     "workDays": 10
+    }
+   }
+  },
+  "new": {
+   "inputs": {
+    "projectStart": "2026-10-05",
+    "firstPassStart": "2027-01-11",
+    "seaTrial": "2028-06-30"
+   },
+   "rows": {
+    "start.period": {
+     "row": 8,
+     "start": "2026-10-05",
+     "end": "2026-10-18",
+     "workDays": 10
+    },
+    "prep.exchange": {
+     "row": 10,
+     "start": "2026-10-19",
+     "end": "2026-10-19",
+     "workDays": 1
+    },
+    "prep.plmStructure": {
+     "row": 11,
+     "start": "2026-10-20",
+     "end": "2026-10-20",
+     "workDays": 1
+    },
+    "prep.plmPlan": {
+     "row": 12,
+     "start": "2026-10-21",
+     "end": "2026-10-21",
+     "workDays": 1
+    },
+    "prep.docList": {
+     "row": 13,
+     "start": "2026-10-22",
+     "end": "2026-10-25",
+     "workDays": 2
+    },
+    "prep.dependencies": {
+     "row": 14,
+     "start": "2026-10-26",
+     "end": "2026-10-31",
+     "workDays": 5
+    },
+    "prep.kickoff": {
+     "row": 15,
+     "start": "2026-11-01",
+     "end": "2026-11-02",
+     "workDays": 1
+    },
+    "prep.mom": {
+     "row": 20,
+     "start": "2026-11-03",
+     "end": "2026-11-03",
+     "workDays": 1
+    },
+    "rfq.prepare": {
+     "row": 22,
+     "start": "2026-11-04",
+     "end": "2026-11-05",
+     "workDays": 2
+    },
+    "rfq.submit": {
+     "row": 23,
+     "start": "2026-11-06",
+     "end": "2026-11-06",
+     "workDays": 1
+    },
+    "rfq.wait": {
+     "row": 24,
+     "start": "2026-11-07",
+     "end": "2026-11-20",
+     "workDays": 10
+    },
+    "rfq.evaluate": {
+     "row": 25,
+     "start": "2026-11-21",
+     "end": "2026-11-25",
+     "workDays": 3
+    },
+    "rfq.nominate": {
+     "row": 26,
+     "start": "2026-11-26",
+     "end": "2026-11-26",
+     "workDays": 1
+    },
+    "rfq.consult": {
+     "row": 27,
+     "start": "2026-11-27",
+     "end": "2026-11-27",
+     "workDays": 1
+    },
+    "rfq.tss": {
+     "row": 28,
+     "start": "2026-11-28",
+     "end": "2026-11-30",
+     "workDays": 1
+    },
+    "rfq.po": {
+     "row": 29,
+     "start": "2026-12-01",
+     "end": "2026-12-03",
+     "workDays": 3
+    },
+    "rfq.waitPo": {
+     "row": 30,
+     "start": "2026-12-04",
+     "end": "2026-12-10",
+     "workDays": 5
+    },
+    "kickoff.meeting": {
+     "row": 32,
+     "start": "2026-12-11",
+     "end": "2026-12-11",
+     "workDays": 1
+    },
+    "kickoff.mom": {
+     "row": 33,
+     "start": "2026-12-12",
+     "end": "2026-12-14",
+     "workDays": 1
+    },
+    "kickoff.matrix": {
+     "row": 34,
+     "start": "2026-12-15",
+     "end": "2026-12-17",
+     "workDays": 3
+    },
+    "kickoff.mobilise": {
+     "row": 35,
+     "start": "2026-12-18",
+     "end": "2026-12-26",
+     "workDays": 6
+    },
+    "kickoff.classMeeting": {
+     "row": 36,
+     "start": "2026-12-27",
+     "end": "2026-12-28",
+     "workDays": 1
+    },
+    "kickoff.classMom": {
+     "row": 37,
+     "start": "2026-12-29",
+     "end": "2026-12-29",
+     "workDays": 1
+    },
+    "firstPass.mark": {
+     "row": 40,
+     "start": "2027-01-11",
+     "end": "2027-01-13",
+     "workDays": 3
+    },
+    "firstPass.collect": {
+     "row": 41,
+     "start": "2027-01-14",
+     "end": "2027-01-27",
+     "workDays": 10
+    },
+    "firstPass.develop": {
+     "row": 42,
+     "start": "2027-01-28",
+     "end": "2027-02-10",
+     "workDays": 10
+    },
+    "firstPass.qa": {
+     "row": 43,
+     "start": "2027-02-11",
+     "end": "2027-03-10",
+     "workDays": 20
+    },
+    "firstPass.vacation": {
+     "row": 45,
+     "start": "2027-03-11",
+     "end": "2027-04-07",
+     "workDays": 20
+    },
+    "rev0.collect": {
+     "row": 47,
+     "start": "2027-07-30",
+     "end": "2027-08-12",
+     "workDays": 10
+    },
+    "rev0.ioSegregation": {
+     "row": 48,
+     "start": "2027-07-30",
+     "end": "2027-07-30",
+     "workDays": 1
+    },
+    "rev0.cmc": {
+     "row": 49,
+     "start": "2027-08-13",
+     "end": "2027-08-26",
+     "workDays": 10
+    },
+    "rev0.r0": {
+     "row": 50,
+     "start": "2027-08-27",
+     "end": "2027-10-21",
+     "workDays": 40
+    },
+    "rev0.cmcDuring": {
+     "row": 51,
+     "start": "2027-08-27",
+     "end": "2027-09-16",
+     "workDays": 15
+    },
+    "rev0.qa": {
+     "row": 52,
+     "start": "2027-10-22",
+     "end": "2027-11-11",
+     "workDays": 15
+    },
+    "rev0.resolve": {
+     "row": 53,
+     "start": "2027-11-12",
+     "end": "2027-12-09",
+     "workDays": 20
+    },
+    "rev0.r1": {
+     "row": 54,
+     "start": "2027-12-10",
+     "end": "2027-12-16",
+     "workDays": 5
+    },
+    "rev0.qaR1": {
+     "row": 55,
+     "start": "2027-12-17",
+     "end": "2027-12-20",
+     "workDays": 2
+    },
+    "rev0.inform": {
+     "row": 56,
+     "start": "2027-12-21",
+     "end": "2027-12-21",
+     "workDays": 1
+    },
+    "owner.upload": {
+     "row": 58,
+     "start": "2027-12-23",
+     "end": "2027-12-24",
+     "workDays": 2
+    },
+    "owner.review": {
+     "row": 59,
+     "start": "2027-12-25",
+     "end": "2028-01-07",
+     "workDays": 10
+    },
+    "owner.respond": {
+     "row": 60,
+     "start": "2028-01-08",
+     "end": "2028-01-21",
+     "workDays": 10
+    },
+    "owner.vacation": {
+     "row": 62,
+     "start": "2028-01-22",
+     "end": "2028-02-18",
+     "workDays": 20
+    },
+    "rev1.upload": {
+     "row": 64,
+     "start": "2027-12-23",
+     "end": "2027-12-23",
+     "workDays": 1
+    },
+    "rev1.approval": {
+     "row": 65,
+     "start": "2027-12-24",
+     "end": "2028-01-13",
+     "workDays": 15
+    },
+    "rev1.respond": {
+     "row": 66,
+     "start": "2028-01-14",
+     "end": "2028-01-27",
+     "workDays": 10
+    },
+    "rev1.vacation": {
+     "row": 68,
+     "start": "2028-01-28",
+     "end": "2028-02-24",
+     "workDays": 20
+    },
+    "rev1.doc": {
+     "row": 69,
+     "start": "2028-02-25",
+     "end": "2028-02-27",
+     "workDays": 1
+    },
+    "rev1.qa": {
+     "row": 70,
+     "start": "2028-02-28",
+     "end": "2028-02-29",
+     "workDays": 2
+    },
+    "rev2.upload": {
+     "row": 72,
+     "start": "2028-03-01",
+     "end": "2028-03-03",
+     "workDays": 3
+    },
+    "rev2.testProcedure": {
+     "row": 73,
+     "start": "2028-03-04",
+     "end": "2028-03-04",
+     "workDays": 0
+    },
+    "rev2.approval": {
+     "row": 74,
+     "start": "2028-03-04",
+     "end": "2028-03-17",
+     "workDays": 10
+    },
+    "rev2.respond": {
+     "row": 75,
+     "start": "2028-03-18",
+     "end": "2028-03-31",
+     "workDays": 10
+    },
+    "rev2.doc": {
+     "row": 77,
+     "start": "2028-04-01",
+     "end": "2028-04-02",
+     "workDays": 0
+    },
+    "rev2.qa": {
+     "row": 78,
+     "start": "2028-04-03",
+     "end": "2028-04-05",
+     "workDays": 3
+    },
+    "classFinal.upload": {
+     "row": 79,
+     "start": "2028-04-06",
+     "end": "2028-04-06",
+     "workDays": 1
+    },
+    "classFinal.approval": {
+     "row": 80,
+     "start": "2028-04-07",
+     "end": "2028-04-20",
+     "workDays": 10
+    },
+    "trials.delivery": {
+     "row": 82,
+     "start": "2028-04-21",
+     "end": "2028-06-29",
+     "workDays": 50
+    },
+    "trials.skills": {
+     "row": 83,
+     "start": "2028-05-19",
+     "end": "2028-06-29",
+     "workDays": 30
+    },
+    "trials.skillsDoc": {
+     "row": 84,
+     "start": "2028-05-19",
+     "end": "2028-05-21",
+     "workDays": 1
+    },
+    "trials.coordination": {
+     "row": 85,
+     "start": "2028-06-02",
+     "end": "2028-06-29",
+     "workDays": 20
+    },
+    "trials.coordMeeting": {
+     "row": 86,
+     "start": "2028-06-02",
+     "end": "2028-06-02",
+     "workDays": null
+    },
+    "trials.coordMom": {
+     "row": 87,
+     "start": "2028-06-03",
+     "end": "2028-06-03",
+     "workDays": 0
+    },
+    "trials.labels": {
+     "row": 88,
+     "start": "2028-06-04",
+     "end": "2028-06-04",
+     "workDays": 0
+    },
+    "trials.internalTesting": {
+     "row": 89,
+     "start": "2028-06-16",
+     "end": "2028-06-29",
+     "workDays": 10
+    },
+    "trials.seaTrial": {
+     "row": 90,
+     "start": "2028-06-30",
+     "end": "2028-07-05",
+     "workDays": 4
+    },
+    "trials.prelim": {
+     "row": 91,
+     "start": "2028-07-06",
+     "end": "2028-07-06",
+     "workDays": 1
+    },
+    "trials.teamWorks": {
+     "row": 92,
+     "start": "2028-07-07",
+     "end": "2028-07-13",
+     "workDays": 5
+    },
+    "trials.distribute": {
+     "row": 93,
+     "start": "2028-07-14",
+     "end": "2028-07-14",
+     "workDays": 1
+    },
+    "trials.responses": {
+     "row": 94,
+     "start": "2028-07-15",
+     "end": "2028-07-15",
+     "workDays": 0
+    },
+    "trials.documents": {
+     "row": 95,
+     "start": "2028-07-16",
+     "end": "2028-07-16",
+     "workDays": 0
+    },
+    "trials.meetings": {
+     "row": 96,
+     "start": "2028-07-17",
+     "end": "2028-07-17",
+     "workDays": 1
+    },
+    "trials.submit": {
+     "row": 97,
+     "start": "2028-07-18",
+     "end": "2028-07-18",
+     "workDays": 1
+    },
+    "trials.report": {
+     "row": 98,
+     "start": "2028-07-14",
+     "end": "2028-07-20",
+     "workDays": 5
+    },
+    "trials.reportUpload": {
+     "row": 99,
+     "start": "2028-07-21",
+     "end": "2028-07-21",
+     "workDays": 1
+    },
+    "lessons.lessons": {
+     "row": 101,
+     "start": "2028-07-22",
+     "end": "2028-08-04",
+     "workDays": 10
+    }
+   }
+  }
+ }
+}

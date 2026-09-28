@@ -4,8 +4,11 @@ import type { Day, ISODate } from './dates';
 export interface KeyDates {
   /** Contract / project start. Drives the forward chain (preparation, RFQ, kick-off). */
   projectStart: ISODate;
-  /** Start of the DP FMEA First Pass (set manually, as in the Excel template). */
-  firstPassStart: ISODate;
+  /**
+   * Start of the DP FMEA First Pass. Empty = automatic: the day after the kick-off
+   * meetings. (In the Excel template it was always typed in by hand.)
+   */
+  firstPassStart: ISODate | null;
   /** First day of sea trials. Drives the backward chain (rev.0 → class approvals → proving trials). */
   seaTrial: ISODate;
   /** Vessel delivery date. Optional; project closure is 3 months after it. */
@@ -20,7 +23,7 @@ export type KeyDateKey = keyof KeyDates;
  */
 export type Anchor =
   /** Starts on a key date (optionally shifted by days or months). */
-  | { kind: 'date'; key: KeyDateKey; offsetDays?: number; offsetMonths?: number }
+  | { kind: 'date'; key: KeyDateKey; offsetDays?: number; offsetMonths?: number; fallback?: Anchor }
   /** Finish-to-start: starts the day after `ref` ends (Excel: `=D(prev)+1`). */
   | { kind: 'after'; ref: string; lag?: number }
   /** Start-to-start: starts together with `ref`. */
@@ -90,6 +93,17 @@ export interface ProjectConfig {
    * 'none' = Mon–Fri only (what the Excel NETWORKDAYS column did).
    */
   calendar: 'NO' | 'none';
+  /**
+   * Never start a task on a weekend or public holiday: forward-planned tasks move to the
+   * next working day, backward-planned tasks to the previous one. Excel: off.
+   */
+  workdayStarts: boolean;
+  /**
+   * 'auto'   – a "4 weeks summer vacation" block only counts when it actually falls in the
+   *            summer (overlaps fellesferie, ISO weeks 28–30); elsewhere it is 0 days.
+   * 'always' – always 28 days wherever it lands (Excel behaviour).
+   */
+  vacations: 'auto' | 'always';
   overrides: Record<string, TaskOverride>;
 }
 
@@ -115,6 +129,8 @@ export interface ScheduledTask extends TaskDef {
   holidays: string[];
   pinned: 'start' | 'end' | null;
   disabled: boolean;
+  /** Vacation block left out automatically because it does not fall in the summer. */
+  autoSkipped: boolean;
   done: boolean;
   comment?: string;
   /** Name/duration differ from the template. */

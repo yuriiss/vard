@@ -223,3 +223,8 @@ button.link { border: 0; padding: 0; background: none; text-decoration: underlin
 .has-holiday::after { content: '•'; color: var(--vard-red); margin-left: 2px; }
 .lg.holiday { background: rgba(210, 0, 0, 0.25); width: 6px !important; height: 14px !important; }
 .lg.ferie { background: rgba(0, 112, 192, 0.18); }
+
+.calc { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-900); }
+.calc .seg button { padding: 2px 8px; font-size: 12px; }
+button.link.small { font-size: 11px; color: var(--grey-700); }
+.auto-skip { color: var(--warn); cursor: help; }

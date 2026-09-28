@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { schedule } from './scheduler';
-import { fellesferie, norwegianHolidays, toISO, parseISO, workDays } from './dates';
-import { EXCEL_DEFAULT_DATES } from './template';
+import { fellesferie, yearOf, isWeekend, holidayName, norwegianHolidays, toISO, parseISO, workDays } from './dates';
+import { EXCEL_DEFAULT_DATES, REALISTIC_MODE } from './template';
 import type { ProjectConfig } from './types';
 
 const base = (): ProjectConfig => ({
   keyDates: { ...EXCEL_DEFAULT_DATES },
   classRevisions: 2,
   ownerReview: true,
+  // Excel arithmetic, plus the Norwegian calendar for work days / warnings.
   calendar: 'NO',
+  workdayStarts: false,
+  vacations: 'always',
   overrides: {},
 });
 
@@ -276,5 +279,75 @@ describe('Norwegian calendar (norskkalender.no)', () => {
 
   it('fellesferie is ISO weeks 28–30', () => {
     expect(fellesferie(2026).map(toISO)).toEqual(['2026-07-06', '2026-07-26']);
+  });
+});
+
+describe('realistic mode', () => {
+  const realistic = (kd: Partial<ProjectConfig['keyDates']> = {}): ProjectConfig => ({
+    ...base(),
+    ...REALISTIC_MODE,
+    keyDates: { ...EXCEL_DEFAULT_DATES, ...kd },
+  });
+
+  it('First Pass follows the kick-off meetings when no date is typed', () => {
+    const s = schedule(realistic({ projectStart: '2026-10-05', firstPassStart: null, seaTrial: '2028-06-30' }));
+    const kickoffEnd = s.tasks.get('kickoff.classMom')!.end!;
+    const fp = s.tasks.get('firstPass.mark')!.start!;
+    expect(fp).toBeGreaterThan(kickoffEnd);
+    expect(fp - kickoffEnd).toBeLessThanOrEqual(4); // next working day (Christmas/weekend at most)
+    expect(s.warnings.filter((w) => w.severity === 'error')).toEqual([]);
+  });
+
+  it('no task that follows another starts on a weekend or Norwegian holiday', () => {
+    for (const seaTrial of ['2026-08-04', '2027-03-15', '2028-06-30']) {
+      const s = schedule(realistic({ firstPassStart: null, seaTrial }));
+      for (const t of s.tasks.values()) {
+        if (t.start == null || t.days === 0 || t.anchor.kind === 'date' || t.anchor.kind === 'none') continue;
+        expect(isWeekend(t.start) || !!holidayName(t.start), `${seaTrial} ${t.id} ${toISO(t.start)}`).toBe(false);
+      }
+    }
+  });
+
+  it('backward-planned tasks still finish before their successor starts', () => {
+    const s = schedule(realistic());
+    for (const t of s.tasks.values()) {
+      if (t.anchor.kind !== 'before' || t.start == null || t.days === 0) continue;
+      const succ = s.tasks.get(t.anchor.ref)!;
+      expect(t.end!, t.id).toBeLessThan(succ.start!);
+    }
+  });
+
+  it('summer vacation only counts when it falls in the summer', () => {
+    const s = schedule(realistic());
+    // Template: First Pass vacation is July 2024 → kept; owner/rev.1 blocks land in spring → dropped.
+    expect(s.tasks.get('firstPass.vacation')!.days).toBe(28);
+    expect(s.tasks.get('rev1.vacation')!.autoSkipped).toBe(true);
+    expect(s.tasks.get('owner.vacation')!.autoSkipped).toBe(true);
+  });
+
+  it('every kept vacation block overlaps fellesferie', () => {
+    const inSummer = (a: number, b: number) =>
+      [fellesferie(yearOf(a)), fellesferie(yearOf(b))].some(([fs, fe]) => a <= fe && b >= fs);
+    let keptRev1 = 0;
+    // Sea trial on every Monday over two years.
+    for (let d = parseISO('2026-01-05'); d < parseISO('2028-01-05'); d += 7) {
+      const s = schedule(realistic({ seaTrial: toISO(d) }));
+      for (const id of ['firstPass.vacation', 'owner.vacation', 'rev1.vacation']) {
+        const t = s.tasks.get(id)!;
+        if (t.autoSkipped) continue;
+        expect(inSummer(t.start!, t.end!), `${toISO(d)} ${id} ${toISO(t.start!)}`).toBe(true);
+        if (id === 'rev1.vacation') keptRev1++;
+      }
+    }
+    expect(keptRev1).toBeGreaterThan(0);
+  });
+
+  it('dropping the spring vacation lets rev.0 start about four weeks later', () => {
+    const excel = schedule(base());
+    const real = schedule(realistic());
+    const diff = real.tasks.get('rev0.collect')!.start! - excel.tasks.get('rev0.collect')!.start!;
+    // +28 for the vacation, minus a few days where tasks moved off weekends/holidays.
+    expect(diff).toBeGreaterThan(14);
+    expect(diff).toBeLessThanOrEqual(28);
   });
 });
