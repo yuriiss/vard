@@ -40,7 +40,11 @@ export async function exportExcel(project: Project, s: Schedule) {
   ws.getCell('A1').value = 'DP FMEA process schedule';
   ws.getCell('A1').font = { name: 'Cambria', size: 16, bold: true };
   ws.getCell('A2').value = `${project.name}${project.vessel ? ` – ${project.vessel}` : ''}`;
-  ws.getCell('A3').value = `Sea trial: ${project.keyDates.seaTrial}   Project start: ${project.keyDates.projectStart}   First Pass start: ${project.keyDates.firstPassStart}   Class approval revisions: ${project.classRevisions}`;
+  const mode =
+    project.vacations === 'always' && !project.workdayStarts && project.calendar === 'none' ? 'Excel-identical' : 'Realistic';
+  ws.getCell('A3').value = `Sea trial: ${project.keyDates.seaTrial}   Project start: ${project.keyDates.projectStart}   First Pass start: ${
+    project.keyDates.firstPassStart ?? 'auto (after kick-off meetings)'
+  }   Class approval revisions: ${project.classRevisions}   Calculation: ${mode}`;
   ws.getCell('A4').value = `Exported ${new Date().toISOString().slice(0, 10)} from DP FMEA Planner`;
   ws.getCell('A4').font = { italic: true, color: { argb: GREY } };
 
