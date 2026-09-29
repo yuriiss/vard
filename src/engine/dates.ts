@@ -178,3 +178,41 @@ export function todayDay(): Day {
   const now = new Date();
   return Math.round(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / MS_PER_DAY);
 }
+
+// --- company vacations -----------------------------------------------------------
+
+export interface VacationWindow {
+  kind: 'summer' | 'winter';
+  name: string;
+  start: Day;
+  /** Last day (inclusive). */
+  end: Day;
+}
+
+/** `MM-DD` of `year` as a Day, or null if invalid. */
+export function monthDay(year: number, mmdd: string): Day | null {
+  const m = /^(\d{2})-(\d{2})$/.exec(mmdd);
+  if (!m) return null;
+  const iso = `${year}-${m[1]}-${m[2]}`;
+  return isValidISO(iso) ? parseISO(iso) : null;
+}
+
+/** Company vacation periods that touch the years `fromYear`..`toYear`. */
+export function vacationWindows(
+  fromYear: number,
+  toYear: number,
+  summer: { start: string; days: number },
+  winter: { start: string; days: number },
+): VacationWindow[] {
+  const out: VacationWindow[] = [];
+  for (let y = fromYear - 1; y <= toYear; y++) {
+    const s = monthDay(y, summer.start);
+    if (s != null && summer.days > 0) out.push({ kind: 'summer', name: `Summer vacation ${y}`, start: s, end: s + summer.days - 1 });
+    const w = monthDay(y, winter.start);
+    if (w != null && winter.days > 0) {
+      const label = yearOf(w + winter.days - 1) !== y ? `${y}/${String(y + 1).slice(2)}` : String(y);
+      out.push({ kind: 'winter', name: `Christmas vacation ${label}`, start: w, end: w + winter.days - 1 });
+    }
+  }
+  return out.sort((a, b) => a.start - b.start);
+}

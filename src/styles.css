@@ -69,7 +69,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--ink-9
 .card small { color: var(--grey-500); font-weight: 400; font-size: 11px; }
 .card .opt { color: var(--grey-500); }
 .card label.check { display: flex; gap: 6px; align-items: center; color: var(--ink-900); font-size: 12px; }
-.keydates { display: grid; grid-template-columns: 1fr 1fr; }
+.keydates { display: grid; grid-template-columns: 1fr 1fr; align-content: start; }
 .keydates h2, .keydates .primary { grid-column: 1 / -1; }
 .revs { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .stepper { display: flex; align-items: center; gap: 8px; }
@@ -228,3 +228,45 @@ button.link { border: 0; padding: 0; background: none; text-decoration: underlin
 .calc .seg button { padding: 2px 8px; font-size: 12px; }
 button.link.small { font-size: 11px; color: var(--grey-700); }
 .auto-skip { color: var(--warn); cursor: help; }
+
+/* --- tree: expand / collapse -------------------------------------------------- */
+.head-row .c-name { justify-content: space-between; }
+.tree-tools { display: inline-flex; gap: 2px; margin-right: 4px; }
+.tool {
+  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; padding: 0;
+  border: 1px solid var(--grey-200); border-radius: 4px; background: var(--white); color: var(--ink-900);
+}
+.tool:hover:not(:disabled) { border-color: var(--vard-red); color: var(--vard-red); }
+.tool:disabled { opacity: 0.3; }
+.twisty {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ink-900);
+}
+.twisty:hover { background: var(--grey-200); color: var(--vard-red); }
+.chevron { transition: transform 0.15s ease; }
+.chevron.open { transform: rotate(90deg); }
+.phase-row .phase-name { cursor: pointer; }
+.phase-row .count { font-weight: 400; font-size: 11px; color: var(--grey-500); margin-left: 6px; flex: none; }
+.phase-row > .left { border-top: 1px solid var(--grey-200); }
+.phase-row:hover > .left { background: var(--grey-100); }
+
+/* --- vacations ---------------------------------------------------------------- */
+.vacation-row > .left { background: #f3f8fc; color: var(--blue); font-style: italic; }
+.vacation-row .c-name { padding-left: 16px !important; gap: 6px; }
+.vacation-row .ro { color: var(--grey-700); font-style: normal; padding-left: 8px !important; }
+.vac-icon { font-style: normal; }
+.bar.vacation.calendar { background: repeating-linear-gradient(45deg, rgba(0, 112, 192, 0.25) 0 4px, rgba(0, 112, 192, 0.08) 4px 8px); border: 1px solid rgba(0, 112, 192, 0.5); cursor: default; }
+.days-cell { gap: 2px; }
+.pause { font-size: 10px; font-weight: 700; color: var(--blue); background: #e6f0f9; border-radius: 8px; padding: 0 4px; cursor: help; flex: none; }
+.vac-settings { display: grid; gap: 4px; padding: 4px 0 2px 22px; }
+.vac-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--grey-700); }
+.vac-label { width: 78px; color: var(--ink-900); }
+.vac-row input.vac-date { width: 58px; text-align: center; }
+.vac-row input.vac-days { width: 48px; text-align: right; }
+.cal-overlay .ferie.summer { background: repeating-linear-gradient(135deg, rgba(0, 112, 192, 0.07) 0 6px, transparent 6px 12px); }
+.cal-overlay .ferie.winter { background: repeating-linear-gradient(135deg, rgba(0, 112, 192, 0.07) 0 6px, transparent 6px 12px); }
+
+/* --- general polish ------------------------------------------------------------- */
+.task-row:hover > .timeline { background-color: rgba(0, 0, 0, 0.015); }
+.bar { border-radius: 3px; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08); }
+.card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }

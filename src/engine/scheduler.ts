@@ -1,6 +1,5 @@
 import {
   addMonths,
-  fellesferie,
   formatDay,
   holidayName,
   holidaysBetween,
@@ -9,7 +8,9 @@ import {
   isValidISO,
   workDays,
   yearOf,
+  vacationWindows,
   type Day,
+  type VacationWindow,
 } from './dates';
 import { buildTemplate } from './template';
 import type {
@@ -31,63 +32,52 @@ interface Span {
 
 export class CycleError extends Error {}
 
+export const DEFAULT_SUMMER = { start: '07-01', days: 28 } as const;
+export const DEFAULT_WINTER = { start: '12-22', days: 14 } as const;
+
 /**
  * Calculate every date in the plan.
  *
  * Each task is placed by its anchor (the old Excel formula) unless the user pinned its
  * start or end date; then everything that hangs off it moves with it. Durations are
  * calendar days, exactly like the Excel DAYS column.
+ *
+ * With `vacations: 'calendar'` company vacations are real calendar periods: work pauses
+ * during them (a task that runs into the summer vacation is stretched by the overlap) and
+ * they are shown as rows in the phases they interrupt, like the vacation rows in Excel.
  */
 export function schedule(cfg: ProjectConfig, phases: PhaseDef[] = buildTemplate(cfg)): Schedule {
-  if ((cfg.vacations ?? 'auto') === 'always') return computeOnce(cfg, phases, new Set());
-
-  // Vacation blocks only count when they land in the summer. Moving one changes where the
-  // others land, so repeat until nothing changes (a handful of rounds at most).
-  const vacationIds = phases.flatMap((p) => p.tasks.filter((t) => t.vacation).map((t) => t.id));
-  let off = new Set<string>();
-  let result = computeOnce(cfg, phases, off);
-  const seen = new Set<string>([key(off)]);
-  for (let round = 0; round < 8; round++) {
-    const next = new Set<string>();
-    for (const id of vacationIds) {
-      const t = result.tasks.get(id);
-      if (!t || t.start == null || cfg.overrides[id]?.disabled) continue;
-      // Where would the full block sit? Forward blocks keep their start, backward ones their end.
-      const full = cfg.overrides[id]?.duration ?? t.duration;
-      const backward = t.anchor.kind === 'before';
-      const a = backward && off.has(id) ? t.start - full : t.start;
-      const b = a + full - 1;
-      if (!overlapsSummer(a, b)) next.add(id);
-    }
-    const k = key(next);
-    if (k === key(off) || seen.has(k)) break;
-    seen.add(k);
-    off = next;
-    result = computeOnce(cfg, phases, off);
-  }
-  return result;
-}
-
-const key = (s: Set<string>) => [...s].sort().join('|');
-
-function overlapsSummer(a: Day, b: Day): boolean {
-  for (let y = yearOf(a); y <= yearOf(b); y++) {
-    const [fs, fe] = fellesferie(y);
-    if (a <= fe && b >= fs) return true;
-  }
-  return false;
-}
-
-function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string>): Schedule {
   const useHolidays = (cfg.calendar ?? 'NO') === 'NO';
   const workdayStarts = cfg.workdayStarts ?? true;
-  const isWorking = (d: Day) => !isWeekend(d) && !(useHolidays && holidayName(d));
+  const calendarVacations = (cfg.vacations ?? 'calendar') !== 'always';
+
+  // Company vacation days, cached per year.
+  const summer = cfg.summerVacation ?? DEFAULT_SUMMER;
+  const winter = cfg.winterVacation ?? DEFAULT_WINTER;
+  const vacCache = new Map<number, VacationWindow[]>();
+  const windowsFor = (y: number) => {
+    let w = vacCache.get(y);
+    if (!w) {
+      w = vacationWindows(y, y, summer, winter).filter((v) => yearOf(v.start) === y || yearOf(v.end) === y);
+      vacCache.set(y, w);
+    }
+    return w;
+  };
+  const vacationAt = (d: Day): VacationWindow | undefined =>
+    calendarVacations ? windowsFor(yearOf(d)).find((v) => d >= v.start && d <= v.end) : undefined;
+  const inVacation = (d: Day) => vacationAt(d) !== undefined;
+
+  const isWorking = (d: Day) => !isWeekend(d) && !(useHolidays && holidayName(d)) && !inVacation(d);
   const nextWorking = (d: Day) => {
     while (!isWorking(d)) d++;
     return d;
   };
   const prevWorking = (d: Day) => {
     while (!isWorking(d)) d--;
+    return d;
+  };
+  const nextFree = (d: Day) => {
+    while (inVacation(d)) d++;
     return d;
   };
 
@@ -111,8 +101,64 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
 
   const durationOf = (t: TaskDef): number => {
     const o = cfg.overrides[t.id];
-    if (o?.disabled || t.kind === 'note' || autoOff.has(t.id)) return 0;
+    if (o?.disabled || t.kind === 'note' || (t.vacation && calendarVacations)) return 0;
     return Math.max(0, Math.round(o?.duration ?? t.duration));
+  };
+
+  /**
+   * Does company vacation pause this task? Not for key-date tasks (sea trial, contract
+   * period) and not for the "N weeks before sea trial" windows – those are fixed offsets.
+   */
+  const pauses = (t: TaskDef): boolean =>
+    calendarVacations &&
+    t.kind === 'task' &&
+    !t.vacation &&
+    t.anchor.kind !== 'date' &&
+    !(t.anchor.kind === 'before' && t.anchor.ref === 'trials.seaTrial');
+
+  /** Tasks up to this many days (meetings, uploads, short DOC tasks) are never split by a vacation. */
+  const SHORT = 5;
+  const firstVacationIn = (a: Day, bEx: Day): VacationWindow | undefined => {
+    for (let d = a; d < bEx; d++) {
+      const v = vacationAt(d);
+      if (v) return v;
+    }
+    return undefined;
+  };
+
+  /** Forward: `dur` days of work from `start`; vacation days don't count. */
+  const fitForward = (start: Day, dur: number, pause: boolean): Span => {
+    if (!pause || dur === 0) return { start, endEx: start + dur };
+    if (dur <= SHORT) {
+      // Short task: move it after the vacation instead of splitting it.
+      for (let v = firstVacationIn(start, start + dur); v; v = firstVacationIn(start, start + dur)) {
+        start = workdayStarts ? nextWorking(v.end + 1) : v.end + 1;
+      }
+      return { start, endEx: start + dur };
+    }
+    let d = start;
+    let left = dur;
+    while (left > 0) {
+      if (!inVacation(d)) left--;
+      d++;
+    }
+    return { start, endEx: d };
+  };
+
+  /** Backward: `dur` days of work finishing before `endEx`; vacation days don't count. */
+  const fitBackward = (endEx: Day, dur: number, pause: boolean): Span => {
+    if (!pause || dur === 0) return { start: endEx - dur, endEx };
+    if (dur <= SHORT) {
+      for (let v = firstVacationIn(endEx - dur, endEx); v; v = firstVacationIn(endEx - dur, endEx)) endEx = v.start;
+      return { start: endEx - dur, endEx };
+    }
+    let d = endEx - 1;
+    let left = dur;
+    while (left > 0) {
+      if (!inVacation(d)) left--;
+      d--;
+    }
+    return { start: d + 1, endEx };
   };
 
   const resolve = (id: string): Span | null => {
@@ -130,22 +176,18 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
       span = null;
     } else if (o?.pinStart && isValidISO(o.pinStart)) {
       const s = parseISO(o.pinStart);
-      span = { start: s, endEx: s + dur };
+      span = { start: s, endEx: fitForward(s, dur, pauses(t)).endEx };
     } else if (o?.pinEnd && isValidISO(o.pinEnd)) {
       const e = parseISO(o.pinEnd);
-      span = dur === 0 ? { start: e, endEx: e } : { start: e + 1 - dur, endEx: e + 1 };
+      span = dur === 0 ? { start: e, endEx: e } : { start: fitBackward(e + 1, dur, pauses(t)).start, endEx: e + 1 };
     } else {
       const a = t.anchor;
-      switch (a.kind) {
-        case 'date': {
-          const s = keyDay(a);
-          if (s != null) span = { start: s, endEx: s + dur };
-          else if (a.fallback) span = place(a.fallback, dur);
-          break;
-        }
-        default:
-          span = place(a, dur);
-          break;
+      if (a.kind === 'date') {
+        const s = keyDay(a);
+        if (s != null) span = { start: s, endEx: s + dur };
+        else if (a.fallback) span = place(a.fallback, dur, pauses({ ...t, anchor: a.fallback }));
+      } else {
+        span = place(a, dur, pauses(t));
       }
     }
 
@@ -155,37 +197,107 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
   };
 
   /** Position from a link to another task. Key dates and pins are never moved. */
-  function place(a: Anchor, dur: number): Span | null {
+  function place(a: Anchor, dur: number, pause: boolean): Span | null {
+    const fwd = (s: Day): Span => {
+      if (dur > 0) {
+        if (workdayStarts) s = nextWorking(s);
+        else if (pause) s = nextFree(s);
+      }
+      return fitForward(s, dur, pause);
+    };
     switch (a.kind) {
       case 'after': {
         const r = resolve(a.ref);
-        if (!r) return null;
-        let s = r.endEx + (a.lag ?? 0);
-        if (workdayStarts && dur > 0) s = nextWorking(s);
-        return { start: s, endEx: s + dur };
+        return r ? fwd(r.endEx + (a.lag ?? 0)) : null;
       }
       case 'with': {
         const r = resolve(a.ref);
-        if (!r) return null;
-        let s = r.start + (a.lag ?? 0);
-        if (workdayStarts && dur > 0) s = nextWorking(s);
-        return { start: s, endEx: s + dur };
+        return r ? fwd(r.start + (a.lag ?? 0)) : null;
       }
       case 'before': {
         const r = resolve(a.ref);
         if (!r) return null;
-        let s = r.start - (a.lag ?? 0) - dur;
+        let endEx = r.start - (a.lag ?? 0);
+        // Don't finish inside a vacation: finish before it instead.
+        if (pause) while (dur > 0 && inVacation(endEx - 1)) endEx--;
+        let span = fitBackward(endEx, dur, pause);
         // Backward planning: start earlier rather than on a day off (never later – that
         // would overlap the task it has to finish before).
-        if (workdayStarts && dur > 0) s = prevWorking(s);
-        return { start: s, endEx: s + dur };
+        if (workdayStarts && dur > 0) {
+          const p = prevWorking(span.start);
+          if (p !== span.start) span = fitForward(p, dur, pause);
+        }
+        return span;
       }
       case 'date': {
         const s = keyDay(a);
-        return s == null ? (a.fallback ? place(a.fallback, dur) : null) : { start: s, endEx: s + dur };
+        return s == null ? (a.fallback ? place(a.fallback, dur, pause) : null) : { start: s, endEx: s + dur };
       }
       case 'none':
         return null;
+    }
+  }
+
+  /**
+   * The stretch of calendar a task "owns": from where its predecessor lets it start (or from
+   * its own start) to where its successor needs it done (or its own end). A vacation in that
+   * stretch either paused the task or pushed it, so it belongs in the schedule next to it.
+   */
+  const ownedRange = (t: ScheduledTask): [Day, Day] | null => {
+    const followsKickoff = t.anchor.kind === 'date' && !!t.anchor.fallback && !cfg.keyDates[t.anchor.key];
+    if (t.start == null || t.end == null || t.disabled || t.days === 0 || !(pauses(t) || followsKickoff)) return null;
+    let lo = t.start;
+    let hi = t.end;
+    const a = t.anchor;
+    if (a.kind === 'after' || a.kind === 'with') {
+      const r = spans.get(a.ref);
+      if (r) lo = Math.min(lo, a.kind === 'after' ? r.endEx : r.start);
+    } else if (a.kind === 'before') {
+      const r = spans.get(a.ref);
+      if (r) hi = Math.max(hi, r.start - 1);
+    } else if (a.kind === 'date' && a.fallback && a.fallback.kind === 'after') {
+      const r = spans.get(a.fallback.ref);
+      if (r) lo = Math.min(lo, r.endEx);
+    }
+    return [lo, hi];
+  };
+
+  /** Add a read-only row for each company vacation that pauses or pushes a task of the phase. */
+  function insertVacationRows(phaseId: string, rows: ScheduledTask[]) {
+    const ranges = rows.map(ownedRange).filter((r): r is [Day, Day] => r != null);
+    if (!ranges.length) return;
+    const from = Math.min(...ranges.map((r) => r[0]));
+    const to = Math.max(...ranges.map((r) => r[1]));
+    const seen = new Set<string>();
+    for (const v of vacationWindows(yearOf(from), yearOf(to), summer, winter)) {
+      if (!ranges.some(([lo, hi]) => lo <= v.end && hi >= v.start) || seen.has(v.name)) continue;
+      seen.add(v.name);
+      const row: ScheduledTask = {
+        id: `vacation.${phaseId}.${v.kind}.${v.start}`,
+        phaseId,
+        name: `${v.name} (${formatDay(v.start)} – ${formatDay(v.end)})`,
+        duration: v.end - v.start + 1,
+        anchor: { kind: 'none' },
+        kind: 'task',
+        vacation: true,
+        calendarBlock: true,
+        wbs: '',
+        start: v.start,
+        end: v.end,
+        days: v.end - v.start + 1,
+        workDays: null,
+        holidays: [],
+        pinned: null,
+        disabled: false,
+        pauseDays: 0,
+        done: false,
+        modified: false,
+      };
+      // Place it after the last row that starts on or before the vacation.
+      let at = rows.length;
+      for (let i = 0; i < rows.length; i++) if (rows[i]!.start != null && rows[i]!.start! > v.start) { at = i; break; }
+      rows.splice(at, 0, row);
+      tasks.set(row.id, row);
     }
   }
 
@@ -197,7 +309,7 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
     // Project start is WBS 0.x like in Excel; the rest are numbered 1..n.
     const wbsBase = p.id === 'start' ? '0' : String(++phaseNo);
     let taskNo = 0;
-    const st: ScheduledTask[] = p.tasks.map((t) => {
+    const st: ScheduledTask[] = p.tasks.filter((t) => !(t.vacation && calendarVacations)).map((t) => {
       const span = resolve(t.id);
       const o = cfg.overrides[t.id] ?? {};
       const days = durationOf(t);
@@ -219,8 +331,8 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
                 .map((h) => `${h.name} (${formatDay(h.day)})`)
             : [],
         pinned: o.pinStart ? 'start' : o.pinEnd ? 'end' : null,
-        disabled: !!o.disabled || autoOff.has(t.id),
-        autoSkipped: autoOff.has(t.id) && !o.disabled,
+        disabled: !!o.disabled,
+        pauseDays: span ? span.endEx - span.start - days : 0,
         done: !!o.done,
         comment: o.comment,
         modified:
@@ -230,6 +342,7 @@ function computeOnce(cfg: ProjectConfig, phases: PhaseDef[], autoOff: Set<string
       tasks.set(t.id, s);
       return s;
     });
+    if (calendarVacations) insertVacationRows(p.id, st);
     const dated = st.filter((t) => t.start != null && !t.disabled);
     const start = dated.length ? Math.min(...dated.map((t) => t.start!)) : null;
     const end = dated.length ? Math.max(...dated.map((t) => t.end!)) : null;

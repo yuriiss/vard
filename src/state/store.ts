@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE, SAMPLE_PROJECT_DATES } from '../engine/template';
-import type { KeyDateKey, Project, TaskOverride } from '../engine/types';
+import type { KeyDateKey, Project, TaskOverride, VacationSetting } from '../engine/types';
 import { toISO, type Day } from '../engine/dates';
 
 const STORAGE_KEY = 'dp-fmea-planner.v1';
@@ -25,7 +25,14 @@ export type Action =
   | { type: 'setRevisions'; value: number }
   | { type: 'setOwnerReview'; value: boolean }
   | { type: 'setCalendar'; value: 'NO' | 'none' }
-  | { type: 'setCalc'; workdayStarts?: boolean; vacations?: 'auto' | 'always'; calendar?: 'NO' | 'none' }
+  | {
+      type: 'setCalc';
+      workdayStarts?: boolean;
+      vacations?: 'calendar' | 'always';
+      calendar?: 'NO' | 'none';
+      summerVacation?: VacationSetting;
+      winterVacation?: VacationSetting;
+    }
   | { type: 'setMeta'; name?: string; vessel?: string }
   | { type: 'setBaseline'; dates: Record<string, { start: Day; end: Day }> | null }
   | { type: 'newProject' }
@@ -67,7 +74,7 @@ export function normaliseProject(raw: unknown): Project {
     ownerReview: p.ownerReview ?? true,
     calendar: p.calendar === 'none' ? 'none' : 'NO',
     workdayStarts: p.workdayStarts ?? true,
-    vacations: p.vacations === 'always' ? 'always' : 'auto',
+    vacations: p.vacations === 'always' ? 'always' : 'calendar',
   };
 }
 
@@ -151,6 +158,8 @@ function apply(ws: Workspace, a: Action): Workspace {
         workdayStarts: a.workdayStarts ?? p.workdayStarts,
         vacations: a.vacations ?? p.vacations,
         calendar: a.calendar ?? p.calendar,
+        summerVacation: a.summerVacation ?? p.summerVacation,
+        winterVacation: a.winterVacation ?? p.winterVacation,
       }));
     case 'setMeta':
       return updateCurrent(ws, (p) => ({ ...p, name: a.name ?? p.name, vessel: a.vessel ?? p.vessel }));

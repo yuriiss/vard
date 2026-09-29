@@ -417,5 +417,5 @@ export const SAMPLE_PROJECT_DATES: typeof EXCEL_DEFAULT_DATES = {
 
 /** Settings that make the planner calculate exactly like the Excel sheet. */
 export const EXCEL_MODE = { calendar: 'none', workdayStarts: false, vacations: 'always' } as const;
-/** Recommended settings: Norwegian calendar, no weekend starts, vacation only in summer. */
-export const REALISTIC_MODE = { calendar: 'NO', workdayStarts: true, vacations: 'auto' } as const;
+/** Recommended settings: Norwegian calendar, no weekend starts, company vacations from the calendar. */
+export const REALISTIC_MODE = { calendar: 'NO', workdayStarts: true, vacations: 'calendar' } as const;

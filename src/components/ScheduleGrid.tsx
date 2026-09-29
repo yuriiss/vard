@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import {
-  fellesferie,
   holidaysBetween,
+  vacationWindows,
   yearOf,
   formatDay,
   formatMonth,
@@ -14,6 +14,7 @@ import {
 } from '../engine/dates';
 import type { Project, Schedule, ScheduledPhase, ScheduledTask, ScheduleWarning } from '../engine/types';
 import type { Action } from '../state/store';
+import { DEFAULT_SUMMER, DEFAULT_WINTER } from '../engine/scheduler';
 import { DateInput, NumberInput, TextInput } from './cells';
 
 export const ZOOMS = { day: 22, week: 9, month: 3.2 } as const;
@@ -25,7 +26,7 @@ interface Props {
   dispatch: (a: Action) => void;
   zoom: Zoom;
   showNotes: boolean;
-  showFellesferie: boolean;
+  showVacations: boolean;
   highlight: string | null;
   /** Scroll the timeline so this day is visible; `n` makes repeated requests re-trigger. */
   focus: { day: number; n: number } | null;
@@ -33,9 +34,21 @@ interface Props {
 
 type Drag = { id: string; mode: 'move' | 'resize'; x0: number; dx: number };
 
-export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, showFellesferie, highlight, focus }: Props) {
+export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, showVacations, highlight, focus }: Props) {
   const dw = ZOOMS[zoom];
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const collapseKey = `dp-fmea-planner.collapsed.${project.id}`;
+  const [collapsed, setCollapsedState] = useState<Set<string>>(() => readCollapsed(collapseKey));
+  useEffect(() => setCollapsedState(readCollapsed(collapseKey)), [collapseKey]);
+  const setCollapsed = (fn: (s: Set<string>) => Set<string>) =>
+    setCollapsedState((prev) => {
+      const next = fn(prev);
+      try {
+        localStorage.setItem(collapseKey, JSON.stringify([...next]));
+      } catch {
+        // per-viewer convenience only
+      }
+      return next;
+    });
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragRef = useRef<Drag | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,8 +105,10 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
   }
   const useHolidays = project.calendar !== 'none';
   const holidays = useHolidays ? holidaysBetween(origin, lastDay) : [];
-  const ferie: [Day, Day][] = [];
-  if (showFellesferie) for (let y = yearOf(origin); y <= yearOf(lastDay); y++) ferie.push(fellesferie(y));
+  const vacations =
+    showVacations && project.vacations !== 'always'
+      ? vacationWindows(yearOf(origin), yearOf(lastDay), project.summerVacation ?? DEFAULT_SUMMER, project.winterVacation ?? DEFAULT_WINTER)
+      : [];
 
   const weeks: Day[] = [];
   for (let d = origin; d <= lastDay; d += 7) weeks.push(d);
@@ -130,6 +145,11 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
     }
   };
 
+  const allCollapsed = schedule.phases.every((p) => collapsed.has(p.id));
+  const noneCollapsed = schedule.phases.every((p) => !collapsed.has(p.id));
+  const collapseAll = () => setCollapsed(() => new Set(schedule.phases.map((p) => p.id)));
+  const expandAll = () => setCollapsed(() => new Set());
+
   const toggle = (id: string) =>
     setCollapsed((s) => {
       const n = new Set(s);
@@ -150,10 +170,19 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
         <div className="left">
           <div className="c-wbs">{p.wbs}</div>
           <div className="c-name">
-            <button className="twisty" onClick={() => toggle(p.id)} aria-label={isCollapsed ? 'Expand' : 'Collapse'}>
-              {isCollapsed ? '▸' : '▾'}
+            <button
+              className="twisty"
+              onClick={() => toggle(p.id)}
+              aria-expanded={!isCollapsed}
+              aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${p.name}`}
+              title={isCollapsed ? 'Expand' : 'Collapse'}
+            >
+              <Chevron open={!isCollapsed} />
             </button>
-            <span className="phase-name">{p.name}</span>
+            <span className="phase-name" onClick={() => toggle(p.id)}>
+              {p.name}
+            </span>
+            {isCollapsed && <span className="count">{plural(p.tasks.filter((t) => t.kind !== 'note' && !t.calendarBlock).length, 'task')}</span>}
             {p.direction === 'backward' && (
               <span className="dir" title="Planned backwards from the sea trial date">
                 ◀ from sea trial
@@ -185,6 +214,35 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
   const renderTask = (t: ScheduledTask) => {
     const ws = warningsByTask.get(t.id);
     const err = ws?.some((w) => w.severity === 'error');
+    if (t.calendarBlock) {
+      return (
+        <div className="row task-row vacation-row" key={t.id} data-row={t.id}>
+          <div className="left">
+            <div className="c-wbs" />
+            <div className="c-name" title="Company vacation – work pauses. Change it under Scope → Vacations.">
+              <span className="vac-icon" aria-hidden>
+                {t.name.startsWith('Summer') ? '☀' : '❄'}
+              </span>
+              {t.name.replace(/ \(.*\)$/, '')}
+            </div>
+            <div className="c-date ro">{formatDay(t.start)}</div>
+            <div className="c-date ro">{formatDay(t.end)}</div>
+            <div className="c-num ro">{t.days}</div>
+            <div className="c-num" />
+            <div className="c-num" />
+            <div className="c-act" />
+          </div>
+          <div className="timeline" style={timelineBg}>
+            {line(today, 'today')}
+            {line(seaTrial, 'sea')}
+            {t.start != null && (
+              <div className="bar vacation calendar" style={{ left: (t.start - origin) * dw, width: Math.max(t.days * dw, 3) }} title={t.name} />
+            )}
+          </div>
+        </div>
+      );
+    }
+
     if (t.kind === 'note') {
       return (
         <div className="row note-row" key={t.id} data-row={t.id}>
@@ -207,6 +265,8 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
     const dDays = isDragging ? Math.round(drag.dx / dw) : 0;
     const start = t.start != null ? t.start + (isDragging && drag.mode === 'move' ? dDays : 0) : null;
     const days = isDragging && drag.mode === 'resize' ? Math.max(1, t.days + dDays) : t.days;
+    // Bar length on the calendar: work days plus any vacation pause.
+    const span = days === 0 ? 0 : days + (isDragging && drag.mode === 'resize' ? 0 : t.pauseDays);
 
     const b = baseline?.[t.id];
     const bStart = b ? parseISO(b.start) : null;
@@ -248,7 +308,7 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
           <div className="c-name" title={t.name}>
             <TextInput
               className="name-input"
-              value={t.autoSkipped ? `${t.name} – not in summer, 0 days` : t.name}
+              value={t.name}
               aria-label="Task name"
               onCommit={(name) => dispatch({ type: 'setOverride', taskId: t.id, patch: { name } })}
             />
@@ -273,15 +333,20 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
               onCommit={(iso) => iso && dispatch({ type: 'setOverride', taskId: t.id, patch: { pinEnd: iso } })}
             />
           </div>
-          <div className="c-num">
+          <div className="c-num days-cell">
             <NumberInput
               className={t.modified ? 'modified' : ''}
               value={t.disabled ? 0 : t.days}
               disabled={t.disabled}
               aria-label="Days"
-              title="Calendar days"
+              title="Calendar days of work"
               onCommit={(n) => dispatch({ type: 'setOverride', taskId: t.id, patch: { duration: n ?? undefined } })}
             />
+            {t.pauseDays > 0 && (
+              <span className="pause" title={`Paused ${t.pauseDays} days for company vacation – ends ${t.pauseDays} days later`}>
+                +{t.pauseDays}
+              </span>
+            )}
           </div>
           <div
             className={`c-num muted ${t.holidays.length ? 'has-holiday' : ''}`}
@@ -307,23 +372,14 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
                 📌
               </button>
             )}
-            {t.autoSkipped ? (
-              <span
-                className="icon auto-skip"
-                title="Left out automatically: this block does not fall in the summer (fellesferie weeks 28–30). Set 'Vacation blocks' to 'Always' to count it anyway."
-              >
-                ☼
-              </span>
-            ) : (
-              <button
-                className={`icon skip ${t.disabled ? 'on' : ''}`}
-                title={t.disabled ? 'Skipped – click to include again' : 'Skip this task (counts as 0 days)'}
-                onClick={() => dispatch({ type: 'setOverride', taskId: t.id, patch: { disabled: !t.disabled } })}
-              >
-                {t.disabled ? '⊘' : '○'}
-              </button>
-            )}
-            {(t.modified || t.pinned || (t.disabled && !t.autoSkipped)) && (
+            <button
+              className={`icon skip ${t.disabled ? 'on' : ''}`}
+              title={t.disabled ? 'Skipped – click to include again' : 'Skip this task (counts as 0 days)'}
+              onClick={() => dispatch({ type: 'setOverride', taskId: t.id, patch: { disabled: !t.disabled } })}
+            >
+              {t.disabled ? '⊘' : '○'}
+            </button>
+            {(t.modified || t.pinned || t.disabled) && (
               <button className="icon" title="Reset to template" onClick={() => dispatch({ type: 'resetTask', taskId: t.id })}>
                 ↺
               </button>
@@ -351,9 +407,11 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
               style={
                 days === 0
                   ? { left: (start - origin) * dw - 6 }
-                  : { left: (start - origin) * dw, width: Math.max(days * dw, 3) }
+                  : { left: (start - origin) * dw, width: Math.max(span * dw, 3) }
               }
-              title={`${t.name}\n${formatDay(start)} – ${formatDay(start + Math.max(days - 1, 0))} (${days} days)${
+              title={`${t.name}\n${formatDay(start)} – ${formatDay(start + Math.max(span - 1, 0))} (${days} days${
+                t.pauseDays ? ` + ${t.pauseDays} days vacation` : ''
+              })${
                 ws ? `\n⚠ ${ws.map((w) => w.message).join('\n⚠ ')}` : ''
               }${t.holidays.length ? `\nHolidays: ${t.holidays.join(', ')}` : ''}\nDrag to move · drag right edge to change duration`}
               onPointerDown={(e) => onBarPointerDown(e, t, 'move')}
@@ -382,7 +440,17 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
         <div className="row head-row head-1">
           <div className="left">
             <div className="c-wbs">WBS</div>
-            <div className="c-name">Task</div>
+            <div className="c-name">
+              <span>Task</span>
+              <span className="tree-tools">
+                <button className="tool" onClick={expandAll} disabled={noneCollapsed} title="Expand all" aria-label="Expand all">
+                  <ExpandAllIcon />
+                </button>
+                <button className="tool" onClick={collapseAll} disabled={allCollapsed} title="Collapse all" aria-label="Collapse all">
+                  <CollapseAllIcon />
+                </button>
+              </span>
+            </div>
             <div className="c-date">Start</div>
             <div className="c-date">End</div>
             <div className="c-num">Days</div>
@@ -406,9 +474,14 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
                 {7 * dw >= 20 ? (zoom === 'day' ? `W${isoWeek(w)} · ${formatDay(w).slice(0, 6)}` : isoWeek(w)) : ''}
               </div>
             ))}
-            {ferie.map(([a, b]) => (
-              <div key={`f${a}`} className="ferie-head" style={{ left: (a - origin) * dw, width: (b - a + 1) * dw }} title="Fellesferie (weeks 28–30)">
-                {(b - a + 1) * dw > 60 ? 'Fellesferie' : ''}
+            {vacations.map((v) => (
+              <div
+                key={`v${v.start}`}
+                className={`ferie-head ${v.kind}`}
+                style={{ left: (v.start - origin) * dw, width: (v.end - v.start + 1) * dw }}
+                title={`${v.name}: ${formatDay(v.start)} – ${formatDay(v.end)}`}
+              >
+                {(v.end - v.start + 1) * dw > 60 ? (v.kind === 'summer' ? '☀ Summer' : '❄ Christmas') : ''}
               </div>
             ))}
             {holidays.map((h) => (
@@ -417,8 +490,8 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
           </div>
         </div>
         <div className="cal-overlay" aria-hidden>
-          {ferie.map(([a, b]) => (
-            <div key={`f${a}`} className="ferie" style={{ left: (a - origin) * dw, width: (b - a + 1) * dw }} />
+          {vacations.map((v) => (
+            <div key={`v${v.start}`} className={`ferie ${v.kind}`} style={{ left: (v.start - origin) * dw, width: (v.end - v.start + 1) * dw }} />
           ))}
           {holidays.map((h) => (
             <div key={h.day} className="holiday" style={{ left: (h.day - origin) * dw, width: Math.max(dw, 2) }} />
@@ -432,3 +505,40 @@ export function ScheduleGrid({ project, schedule, dispatch, zoom, showNotes, sho
     </div>
   );
 }
+
+function readCollapsed(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg className={`chevron ${open ? 'open' : ''}`} width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+      <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Two stacked chevrons pointing down: open every phase. */
+function ExpandAllIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path d="M4.5 4 9 8.5 13.5 4M4.5 9.5 9 14 13.5 9.5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Two stacked chevrons pointing up: close every phase. */
+function CollapseAllIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path d="M4.5 8.5 9 4 13.5 8.5M4.5 14 9 9.5 13.5 14" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;

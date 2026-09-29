@@ -50,9 +50,9 @@ mode (the default; switch in *Scope → Calculation*) fixes them:
 
 | Excel rule | Problem | Realistic mode |
 |---|---|---|
-| First Pass start is typed by hand | Change the project dates and First Pass stays in the old year (before project start) | Leave it empty and First Pass starts after the kick-off meetings; typing a date still works |
-| "4 weeks summer vacation" is always 28 days | The block lands in Jan–Mar and pushes rev.0 a month earlier for nothing | A vacation block only counts when it overlaps fellesferie (weeks 28–30); otherwise 0 days (☼ in the row) |
-| Calendar-day arithmetic | Uploads, meetings and DOC tasks start on Saturdays, Sundays and holidays (0 work days) | Forward-planned tasks move to the next working day, backward-planned tasks to the previous one; key dates and pinned dates are never moved |
+| First Pass start is typed by hand | Change the project dates and First Pass stays in the old year (prototype.xlsx: 2024, two years before project start) | Leave it empty and First Pass starts after the kick-off meetings; typing a date still works |
+| Three fixed "4 weeks summer vacation" rows in the chain | They land wherever the chain puts them (prototype.xlsx: Aug–Sep 2028) while the real July vacation hits "resolve findings" with nothing counted | Company vacations are calendar periods – **summer from 1 July, 28 days** and **Christmas from 22 December, 14 days** (both editable in *Scope*). They appear as rows in the phases they interrupt, and work pauses during them (a 28-day task through July ends 28 days later). Short tasks (≤ 5 days: meetings, uploads) move past a vacation instead of being split |
+| Calendar-day arithmetic | Uploads, meetings and DOC tasks start on Saturdays, Sundays and holidays (0 work days) | Tasks start on working days (no weekends, Norwegian public holidays or company vacation); forward-planned tasks move later, backward-planned tasks earlier. Key dates and pinned dates are never moved |
 
 ## What you can do that Excel made painful
 
@@ -71,7 +71,7 @@ mode (the default; switch in *Scope → Calculation*) fixes them:
   year). Holidays are shaded in the Gantt, and meetings, uploads, deliverables, the sea trial and pinned dates
   that start on a holiday are flagged. Fellesferie (ISO weeks 28–30) can be shown as well. Switch the calendar
   off to get Excel's plain `NETWORKDAYS` (Mon–Fri).
-- **Owner review** on/off, checklist notes on/off.
+- **Owner review** on/off, checklist notes on/off, **Collapse all / Expand all** (remembered per project).
 - **Baseline**: freeze today's plan and see how many days each task moved later.
 - **Undo/redo** (Ctrl+Z / Ctrl+Shift+Z), several projects, duplicate a project to try a scenario.
 - **Export Excel** (dates + weekly Gantt) for people who still want the spreadsheet, **Save/Open file**

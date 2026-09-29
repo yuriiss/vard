@@ -82,6 +82,13 @@ export interface TaskOverride {
   comment?: string;
 }
 
+export interface VacationSetting {
+  /** First day, `MM-DD`. */
+  start: string;
+  /** Length in calendar days (0 = none). */
+  days: number;
+}
+
 export interface ProjectConfig {
   keyDates: KeyDates;
   /** Number of "DP FMEA Class approval rev.N" cycles. Excel template = 2. */
@@ -99,11 +106,16 @@ export interface ProjectConfig {
    */
   workdayStarts: boolean;
   /**
-   * 'auto'   – a "4 weeks summer vacation" block only counts when it actually falls in the
-   *            summer (overlaps fellesferie, ISO weeks 28–30); elsewhere it is 0 days.
-   * 'always' – always 28 days wherever it lands (Excel behaviour).
+   * 'calendar' – company vacations are real calendar periods (summer from 1 July, Christmas
+   *              around New Year). They appear as rows in the schedule and work pauses
+   *              during them; the template's fixed "4 weeks summer vacation" rows are dropped.
+   * 'always'   – the template's fixed 28-day vacation rows, wherever the chain puts them (Excel).
    */
-  vacations: 'auto' | 'always';
+  vacations: 'calendar' | 'always';
+  /** Summer vacation: first day as MM-DD and length in calendar days. Default 07-01, 28. */
+  summerVacation?: VacationSetting;
+  /** Christmas / winter vacation. Default 12-22, 14 days. */
+  winterVacation?: VacationSetting;
   overrides: Record<string, TaskOverride>;
 }
 
@@ -129,8 +141,10 @@ export interface ScheduledTask extends TaskDef {
   holidays: string[];
   pinned: 'start' | 'end' | null;
   disabled: boolean;
-  /** Vacation block left out automatically because it does not fall in the summer. */
-  autoSkipped: boolean;
+  /** Calendar days the task is paused for company vacation (added to its length). */
+  pauseDays: number;
+  /** Company vacation row generated from the calendar (read-only). */
+  calendarBlock?: boolean;
   done: boolean;
   comment?: string;
   /** Name/duration differ from the template. */

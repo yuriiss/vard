@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { schedule } from './scheduler';
-import { fellesferie, yearOf, isWeekend, holidayName, norwegianHolidays, toISO, parseISO, workDays } from './dates';
+import { DEFAULT_SUMMER, DEFAULT_WINTER, schedule } from './scheduler';
+import { fellesferie, vacationWindows, yearOf, isWeekend, holidayName, norwegianHolidays, toISO, parseISO, workDays } from './dates';
 import { EXCEL_DEFAULT_DATES, REALISTIC_MODE } from './template';
 import type { ProjectConfig } from './types';
 
@@ -303,6 +303,7 @@ describe('realistic mode', () => {
       const s = schedule(realistic({ firstPassStart: null, seaTrial }));
       for (const t of s.tasks.values()) {
         if (t.start == null || t.days === 0 || t.anchor.kind === 'date' || t.anchor.kind === 'none') continue;
+        if (t.calendarBlock) continue;
         expect(isWeekend(t.start) || !!holidayName(t.start), `${seaTrial} ${t.id} ${toISO(t.start)}`).toBe(false);
       }
     }
@@ -312,42 +313,91 @@ describe('realistic mode', () => {
     const s = schedule(realistic());
     for (const t of s.tasks.values()) {
       if (t.anchor.kind !== 'before' || t.start == null || t.days === 0) continue;
-      const succ = s.tasks.get(t.anchor.ref)!;
-      expect(t.end!, t.id).toBeLessThan(succ.start!);
+      const succ = s.tasks.get(t.anchor.ref);
+      if (!succ || succ.start == null) continue; // hidden 0-day vacation row
+      expect(t.end!, t.id).toBeLessThan(succ.start);
     }
   });
 
-  it('summer vacation only counts when it falls in the summer', () => {
-    const s = schedule(realistic());
-    // Template: First Pass vacation is July 2024 → kept; owner/rev.1 blocks land in spring → dropped.
-    expect(s.tasks.get('firstPass.vacation')!.days).toBe(28);
-    expect(s.tasks.get('rev1.vacation')!.autoSkipped).toBe(true);
-    expect(s.tasks.get('owner.vacation')!.autoSkipped).toBe(true);
-  });
+  const seaTrials = () => {
+    const out: string[] = [];
+    // Sea trial every second Monday over three years.
+    for (let d = parseISO('2026-01-05'); d < parseISO('2029-01-05'); d += 14) out.push(toISO(d));
+    return out;
+  };
+  const windows = (s: ReturnType<typeof schedule>) =>
+    vacationWindows(yearOf(s.start!), yearOf(s.end!), DEFAULT_SUMMER, DEFAULT_WINTER);
 
-  it('every kept vacation block overlaps fellesferie', () => {
-    const inSummer = (a: number, b: number) =>
-      [fellesferie(yearOf(a)), fellesferie(yearOf(b))].some(([fs, fe]) => a <= fe && b >= fs);
-    let keptRev1 = 0;
-    // Sea trial on every Monday over two years.
-    for (let d = parseISO('2026-01-05'); d < parseISO('2028-01-05'); d += 7) {
-      const s = schedule(realistic({ seaTrial: toISO(d) }));
-      for (const id of ['firstPass.vacation', 'owner.vacation', 'rev1.vacation']) {
-        const t = s.tasks.get(id)!;
-        if (t.autoSkipped) continue;
-        expect(inSummer(t.start!, t.end!), `${toISO(d)} ${id} ${toISO(t.start!)}`).toBe(true);
-        if (id === 'rev1.vacation') keptRev1++;
+  it('work never starts or ends inside a company vacation', () => {
+    for (const seaTrial of seaTrials()) {
+      const s = schedule(realistic({ firstPassStart: null, projectStart: '2025-06-02', seaTrial }));
+      const ws = windows(s);
+      for (const t of s.tasks.values()) {
+        if (t.calendarBlock || t.start == null || t.days === 0 || t.anchor.kind === 'date') continue;
+        if (t.anchor.kind === 'before' && t.anchor.ref === 'trials.seaTrial') continue;
+        for (const v of ws) {
+          expect(t.start >= v.start && t.start <= v.end, `${seaTrial} ${t.id} starts in ${v.name}`).toBe(false);
+          expect(t.end! >= v.start && t.end! <= v.end, `${seaTrial} ${t.id} ends in ${v.name}`).toBe(false);
+        }
       }
     }
-    expect(keptRev1).toBeGreaterThan(0);
   });
 
-  it('dropping the spring vacation lets rev.0 start about four weeks later', () => {
-    const excel = schedule(base());
-    const real = schedule(realistic());
-    const diff = real.tasks.get('rev0.collect')!.start! - excel.tasks.get('rev0.collect')!.start!;
-    // +28 for the vacation, minus a few days where tasks moved off weekends/holidays.
-    expect(diff).toBeGreaterThan(14);
-    expect(diff).toBeLessThanOrEqual(28);
+  it('a task that runs through a vacation is stretched by exactly the vacation days', () => {
+    for (const seaTrial of seaTrials()) {
+      const s = schedule(realistic({ seaTrial }));
+      const ws = windows(s);
+      for (const t of s.tasks.values()) {
+        if (t.calendarBlock || t.start == null || t.days === 0) continue;
+        const overlap = ws.reduce((n, v) => n + Math.max(0, Math.min(t.end!, v.end) - Math.max(t.start!, v.start) + 1), 0);
+        if (t.pauseDays > 0) expect(t.pauseDays, `${seaTrial} ${t.id}`).toBe(overlap);
+        expect(t.end! - t.start! + 1, `${seaTrial} ${t.id}`).toBe(t.days + t.pauseDays);
+      }
+    }
+  });
+
+  it('every vacation that pauses work is shown as a row in that phase', () => {
+    for (const seaTrial of seaTrials()) {
+      const s = schedule(realistic({ seaTrial }));
+      for (const p of s.phases) {
+        for (const t of p.tasks) {
+          if (!t.pauseDays) continue;
+          const rows = p.tasks.filter((r) => r.calendarBlock && r.start! <= t.end! && r.end! >= t.start!);
+          expect(rows.length, `${seaTrial} ${t.id}`).toBeGreaterThan(0);
+        }
+      }
+      // The template's fixed "4 weeks summer vacation" rows are replaced by the calendar ones.
+      expect(s.tasks.has('rev1.vacation')).toBe(false);
+    }
+  });
+
+  it('short tasks (meetings, uploads) are moved past a vacation, never split', () => {
+    for (const seaTrial of seaTrials()) {
+      const s = schedule(realistic({ firstPassStart: null, projectStart: '2025-06-02', seaTrial }));
+      for (const t of s.tasks.values()) if (t.days > 0 && t.days <= 5) expect(t.pauseDays, `${seaTrial} ${t.id}`).toBe(0);
+    }
+  });
+
+  it('real project (prototype.xlsx): summer 2028 pauses rev.0, Christmas shown before First Pass', () => {
+    const s = schedule(realistic({ projectStart: '2026-09-21', firstPassStart: null, seaTrial: '2029-01-31' }));
+    const rev0 = s.phases.find((p) => p.id === 'rev0')!;
+    const summer = rev0.tasks.find((t) => t.calendarBlock && t.name.startsWith('Summer vacation 2028'));
+    expect(summer, 'summer 2028 row in rev.0').toBeDefined();
+    expect(toISO(summer!.start!)).toBe('2028-07-01');
+    expect(toISO(summer!.end!)).toBe('2028-07-28');
+    expect(s.tasks.get('rev0.resolve')!.pauseDays).toBe(28);
+    const xmas = [...s.tasks.values()].find((t) => t.calendarBlock && t.name.startsWith('Christmas vacation 2026/27'));
+    expect(xmas, 'Christmas 2026/27 row').toBeDefined();
+    // The Class kick-off meeting is not split over Christmas; it moves to after it.
+    const meeting = s.tasks.get('kickoff.classMeeting')!;
+    expect(meeting.pauseDays).toBe(0);
+    expect(meeting.start!).toBeGreaterThan(xmas!.end!);
+    expect(s.warnings.filter((w) => w.severity === 'error')).toEqual([]);
+  });
+
+  it('Excel-identical mode keeps the fixed 28-day rows', () => {
+    const s = schedule({ ...realistic(), vacations: 'always' });
+    expect(s.tasks.get('rev1.vacation')!.days).toBe(28);
+    expect([...s.tasks.values()].some((t) => t.calendarBlock)).toBe(false);
   });
 });

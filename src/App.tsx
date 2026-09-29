@@ -5,14 +5,16 @@ import { EXCEL_MODE, MAX_REVISIONS, MIN_REVISIONS, REALISTIC_MODE } from './engi
 import type { Schedule } from './engine/types';
 import { useWorkspace } from './state/store';
 import { exportExcel, exportJson, readJsonFile } from './state/files';
-import { DateInput, TextInput } from './components/cells';
+import { DateInput, NumberInput, TextInput } from './components/cells';
+import { DEFAULT_SUMMER, DEFAULT_WINTER } from './engine/scheduler';
+import type { VacationSetting } from './engine/types';
 import { ScheduleGrid, type Zoom } from './components/ScheduleGrid';
 
 export default function App() {
   const { workspace, project, dispatch, canUndo, canRedo } = useWorkspace();
   const [zoom, setZoom] = useState<Zoom>('week');
   const [showNotes, setShowNotes] = useState(true);
-  const [showFellesferie, setShowFellesferie] = useState(true);
+  const [showVacations, setShowVacations] = useState(true);
   const [highlight, setHighlight] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ day: number; n: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -211,7 +213,7 @@ export default function App() {
               <button
                 className={isRealistic ? 'on' : ''}
                 onClick={() => dispatch({ type: 'setCalc', ...REALISTIC_MODE })}
-                title="Norwegian calendar, tasks start on working days, summer vacation only in the summer"
+                title="Norwegian public holidays, company vacations (summer + Christmas) in the schedule, tasks start on working days"
               >
                 Realistic
               </button>
@@ -243,14 +245,28 @@ export default function App() {
           <label className="check">
             <input
               type="checkbox"
-              checked={project.vacations === 'auto'}
-              onChange={(e) => dispatch({ type: 'setCalc', vacations: e.target.checked ? 'auto' : 'always' })}
+              checked={project.vacations === 'calendar'}
+              onChange={(e) => dispatch({ type: 'setCalc', vacations: e.target.checked ? 'calendar' : 'always' })}
             />
-            Vacation blocks only when they fall in the summer
+            Company vacations from the calendar (work pauses)
           </label>
+          {project.vacations === 'calendar' && (
+            <div className="vac-settings">
+              <VacationRow
+                label="☀ Summer"
+                value={project.summerVacation ?? DEFAULT_SUMMER}
+                onChange={(v) => dispatch({ type: 'setCalc', summerVacation: v })}
+              />
+              <VacationRow
+                label="❄ Christmas"
+                value={project.winterVacation ?? DEFAULT_WINTER}
+                onChange={(v) => dispatch({ type: 'setCalc', winterVacation: v })}
+              />
+            </div>
+          )}
           <label className="check">
-            <input type="checkbox" checked={showFellesferie} onChange={(e) => setShowFellesferie(e.target.checked)} />
-            Show fellesferie (weeks 28–30)
+            <input type="checkbox" checked={showVacations} onChange={(e) => setShowVacations(e.target.checked)} />
+            Shade vacations in the Gantt
           </label>
           <label className="check">
             <input type="checkbox" checked={showNotes} onChange={(e) => setShowNotes(e.target.checked)} />
@@ -311,7 +327,7 @@ export default function App() {
           <span><i className="lg sea" /> Sea trial</span>
           <span><i className="lg today" /> Today</span>
           {project.calendar !== 'none' && <span><i className="lg holiday" /> Public holiday</span>}
-          {showFellesferie && <span><i className="lg ferie" /> Fellesferie</span>}
+          {showVacations && project.vacations === 'calendar' && <span><i className="lg ferie" /> Company vacation</span>}
           {project.baseline && <span><i className="lg baseline" /> Baseline</span>}
         </div>
         <div className="controls">
@@ -346,11 +362,43 @@ export default function App() {
         </div>
       </section>
 
-      <ScheduleGrid project={project} schedule={s} dispatch={dispatch} zoom={zoom} showNotes={showNotes} showFellesferie={showFellesferie} highlight={highlight} focus={focus} />
+      <ScheduleGrid project={project} schedule={s} dispatch={dispatch} zoom={zoom} showNotes={showNotes} showVacations={showVacations} highlight={highlight} focus={focus} />
 
       <footer className="foot">
         <span className="legal">Vard Electro AS</span> · DP FMEA delivery planning · data is stored in this browser – use “Save file” to share
       </footer>
+    </div>
+  );
+}
+
+/** "☀ Summer  from [01.07]  for [28] days" */
+function VacationRow(props: { label: string; value: VacationSetting; onChange: (v: VacationSetting) => void }) {
+  const [mm, dd] = props.value.start.split('-');
+  return (
+    <div className="vac-row">
+      <span className="vac-label">{props.label}</span>
+      <span>from</span>
+      <TextInput
+        className="vac-date"
+        value={`${dd}.${mm}`}
+        aria-label={`${props.label} first day (dd.mm)`}
+        onCommit={(v) => {
+          const m = /^(\d{1,2})[./-](\d{1,2})$/.exec(v.trim());
+          if (!m) return;
+          const d = Number(m[1]);
+          const mo = Number(m[2]);
+          if (mo < 1 || mo > 12 || d < 1 || d > 31) return;
+          props.onChange({ ...props.value, start: `${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` });
+        }}
+      />
+      <span>for</span>
+      <NumberInput
+        className="vac-days"
+        value={props.value.days}
+        aria-label={`${props.label} days`}
+        onCommit={(n) => n != null && props.onChange({ ...props.value, days: Math.min(62, n) })}
+      />
+      <span>days</span>
     </div>
   );
 }
